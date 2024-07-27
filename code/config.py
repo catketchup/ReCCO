@@ -9,7 +9,7 @@ z_min = 0.2 #lowest redshift.
 N_bins = 8 #number of red shift bins, uniform in conformal distance.
 
 ################ halomodel
-
+use_halomodel = False
 gasprofile = 'AGN' #only used if use_halomodel=True
 A_electron = 1  # This parameter interpolates between Pk of electrons and Pk of dark matter. It serves to test dependence on fiducial model of electrons. 1 is full electron model.
 halomassfunction = 'Tinker'
@@ -17,14 +17,14 @@ mdef = 'm200d'
 log_kmax = 2
 log_kmin = -5
 k_res = 1000
-ks_hm = np.logspace(log_kmin,log_kmax,num=k_res )     #k-sampling 
-zs_hm = np.logspace(-2,np.log10(6),150) #z-sampling 
+ks_hm = np.logspace(log_kmin,log_kmax,num=k_res )     #k-sampling
+zs_hm = np.logspace(-2,np.log10(6),150) #z-sampling
 
-################ LSS 
+################ LSS
 
 LSSexperiment = 'LSST' # 'unwise_blue' #'custom
 
-sigma_photo_z = 0.05 
+sigma_photo_z = 0.05
 sigma_cal = 1e-4 # variance of photometric calibration erros (as appearing in arXiv:1709.08661)
 
 ################ cosmological parameters
@@ -39,7 +39,7 @@ mnu = 0.06
 h = 0.68
 H0 = h * 100
 ns = 0.965
-    
+
 ombh2 = Omega_b*h**2
 omch2=Omega_c*h**2
 
