@@ -22,6 +22,7 @@ estimator = estimator(data_lmax, conf)
 
 
 Cls = estimator.load_theory_Cl('vr', 'vr')
+print(Cls.shape)
+print('Generating vmap and vlm')
 vmap, vlm = estimator.get_maps_and_alms(['vr'], nside, lmax)
 # print(type(Cls))
-print(Cls.shape)
