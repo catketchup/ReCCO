@@ -1,0 +1,5 @@
+#+STARTUP:indent
+`fht` computes a discrete version of the Hankel transform
+\[\tilde{A}(k) = \int^\infty_0 A(r) J_{\mu} (k r) k \,dr \]
+$A(r) = a(r) r^q \quad \text{and} \quad$
+$\tilde{A}(k) = \tilde{a}(k) k^{-q}$

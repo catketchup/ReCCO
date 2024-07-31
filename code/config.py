@@ -6,7 +6,7 @@ import numpy as np
 z_max = 5.0 #highest redshift.
 z_min = 0.2 #lowest redshift.
 
-N_bins = 8 #number of red shift bins, uniform in conformal distance.
+N_bins = 10 #number of red shift bins, uniform in conformal distance.
 
 ################ halomodel
 use_halomodel = False
