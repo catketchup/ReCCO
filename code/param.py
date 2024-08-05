@@ -20,7 +20,7 @@ B = 0.0
 # A = 1
 # B = 1
 # need a resolution of the 3-d grid?
-d = 500
+d = 1000
 N = int(2*r_o/d) +1
 
 curvature_ini_Class = 1
