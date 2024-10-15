@@ -11,7 +11,7 @@ r_o = 15000
 x_c = 0
 r_H = c/H0
 # initial potential from bubble collision psi_i parametried by A and B, Eq.2.2
-A = 1.e-10 # 1-sigma limit
+A = 1.e-5 # 1-sigma limit
 B = 0.0
 
 # A = 0
