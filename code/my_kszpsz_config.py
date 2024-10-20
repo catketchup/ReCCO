@@ -80,7 +80,7 @@ noiseTuKArcmin_pol = 1.0 #1.5
 # kaux = np.linspace(k_min, k_max, 200)
 
 k_min = -5  #logscale
-k_max = -2  #logscale
+k_max = -1.9  #logscale
 k_res = 200
 
 # pivot scale
