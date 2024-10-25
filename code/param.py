@@ -12,7 +12,7 @@ x_c = 0
 r_H = c/H0
 # initial potential from bubble collision psi_i parametried by A and B, Eq.2.2
 A = 1.e-4 # 1-sigma limit
-B = 1.e-4
+B = 0
 
 # A = 0
 # B = 1.e-4 # 1-sigma limit
