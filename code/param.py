@@ -14,6 +14,9 @@ r_H = c/H0
 A = 1.e-4 # 1-sigma limit
 B = 0
 
+# A =  0# 1-sigma limit
+# B = 1.e-4
+
 # A = 0
 # B = 1.e-4 # 1-sigma limit
 
