@@ -5,7 +5,7 @@ from __future__ import absolute_import
 import numpy as np
 from scipy import special
 import scipy.integrate as integrate
-import my_kszpsz_config as conf
+import kszpsz_config as conf
 from numpy.linalg import inv
 from scipy.interpolate import interp1d, interp2d
 import scipy.optimize as optimize

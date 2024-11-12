@@ -3,10 +3,10 @@ import numpy as np
 
 ################ red shift binning
 
-z_max = 5.0 #highest redshift.
-z_min = 0.2 #lowest redshift.
+# z_max = 5.0 #highest redshift.
+# z_min = 0.2 #lowest redshift.
 
-N_bins = 32 #number of red shift bins, uniform in conformal distance.
+# N_bins = 32 #number of red shift bins, uniform in conformal distance.
 
 transfer_integrand_sampling = 500
 

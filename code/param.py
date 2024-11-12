@@ -9,10 +9,10 @@ H0 = 68
 r_o = 15000
 # the boundary position of the two bubbles, Mpc
 x_c = 0
-r_H = c/H0
+r_H = c/H0 # Mpc
 # initial potential from bubble collision psi_i parametried by A and B, Eq.2.2
-A = 1.e-4 # 1-sigma limit
-B = 0
+# A = 1.e-4 # 1-sigma limit
+# B = 0
 
 # A =  0# 1-sigma limit
 # B = 1.e-4
