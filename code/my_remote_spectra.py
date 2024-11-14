@@ -455,6 +455,15 @@ def G_Dopp_ksz(k, ze, Omega_b, Omega_c, w, wa, Omega_K, h):
 
     return G_Dopp_ksz
 
+def G_Dopp_ksz_test(k, ze, Omega_b, Omega_c, w, wa, Omega_K, h):
+    """kSZ Integral kernel for the Doppler effect"""
+    chidec = Chia(Omega_b, Omega_c, w, wa, Omega_K, h)[0]
+    chie = Chia_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(az(ze))
+    G_Dopp_ksz = k * Dv(Omega_b, Omega_c, w, wa, Omega_K, h)[0] * (special.spherical_jn(0, k * (
+        chidec - chie)) - 2 * special.spherical_jn(2, k * (chidec - chie))) - k * Dv_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(az(ze))*Dpsi_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(az(ze))
+
+    return G_Dopp_ksz
+
 
 def G_localDopp_ksz(k, ze, Omega_b, Omega_c, w, wa, Omega_K, h):
     """kSZ Integral kernel for the local Doppler effect"""
