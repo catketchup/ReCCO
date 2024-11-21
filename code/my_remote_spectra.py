@@ -424,6 +424,9 @@ def G_SW_ksz(k, ze, Omega_b, Omega_c, w, wa, Omega_K, h):
     G_SW_ksz = 3 * (2 * Dpsi(Omega_b, Omega_c, w, wa, Omega_K, h)
                     [0] - 3 / 2) * special.spherical_jn(1, k * (chidec - chie))
 
+    # G_SW_ksz = 3 * (2 * Dpsi(Omega_b, Omega_c, w, wa, Omega_K, h)
+    #                 [0] - 3 / 2)
+
     return G_SW_ksz
 
 
