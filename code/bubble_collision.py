@@ -27,26 +27,20 @@ class BubbleCollision_Veff():
         self.Dv_dec = rs.Dv_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(1/(1+config.zdec))
 
     def Cos_theta_c(self, theta_e):
-        return (self.chi_c -self.chi_e*np.cos(theta_e))/self.chi_edec
+        Cos_theta_c = (self.chi_c -self.chi_e*np.cos(theta_e))/self.chi_edec
+        Cos_theta_c[np.where(abs(Cos_theta_c)>=1)] = 1
+        # if (self.chi_e*cos_theta_e - self.chi_edec >= self.chi_c) or (self.chi_e*cos_theta_e + self.chi_edec <= self.chi_c):
+
+        return Cos_theta_c
 
     def Approx_Veff_SW_radial(self, theta_e):
+        # need to select the range of Z_e and theta_e
         A = self.A
         B = self.B
         cos_theta_c = self.Cos_theta_c(theta_e)
         cos_theta_e = np.cos(theta_e)
 
-        return  (2*self.Dpsi_dec-3/2)*3/2*cos_theta_e*(A/self.r_H*((self.chi_e*cos_theta_e-self.chi_c)*1/2*(1-cos_theta_c**2)+1/3*self.chi_edec*(1-cos_theta_c**3)) + B/(self.r_H**2)*((self.chi_e*cos_theta_e-self.chi_c)**2*1/2*(1-cos_theta_c**2) + (self.chi_e*cos_theta_e-self.chi_c)*self.chi_edec*2/3*(1-cos_theta_c**3) + 1/4*self.chi_edec**2*(1-cos_theta_c**4)))
-
-
-    def Psi_i_chia(self, a, theta_e):
-        A = self.A
-        B = self.B
-        chi_edec = rs.chifromz(config.zdec) - rs.chifromz(1/a-1)
-
-        cos_theta_c = (self.chi_c -self.chi_e*np.cos(theta_e))/chi_edec
-        cos_theta_e = np.cos(theta_e)
-
-        return 3/2*cos_theta_e*(A/self.r_H*((self.chi_e*cos_theta_e-self.chi_c)*1/2*(1-cos_theta_c**2)+1/3*self.chi_edec*(1-cos_theta_c**3)) + B/(self.r_H**2)*((self.chi_e*cos_theta_e-self.chi_c)**2*1/2*(1-cos_theta_c**2) + (self.chi_e*cos_theta_e-self.chi_c)*self.chi_edec*2/3*(1-cos_theta_c**3) + 1/4*self.chi_edec**2*(1-cos_theta_c**4)))
+        return (2*self.Dpsi_dec-3/2)*3/2*cos_theta_e*(A/self.r_H*((self.chi_e*cos_theta_e-self.chi_c)*1/2*(1-cos_theta_c**2)+1/3*self.chi_edec*(1-cos_theta_c**3)) + B/(self.r_H**2)*((self.chi_e*cos_theta_e-self.chi_c)**2*1/2*(1-cos_theta_c**2) + (self.chi_e*cos_theta_e-self.chi_c)*self.chi_edec*2/3*(1-cos_theta_c**3) + 1/4*self.chi_edec**2*(1-cos_theta_c**4)))
 
 
     def Approx_Veff_localDopp_radial(self, theta_e):
@@ -58,19 +52,43 @@ class BubbleCollision_Veff():
 
         return -self.Dv_e/(self.r_H)*(A + 2*B*(self.chi_e*cos_theta_e - self.chi_c))*cos_theta_e*step_array
 
+
     def Approx_Veff_decDopp_radial(self, theta_e):
         A = self.A
         B = self.B
         cos_theta_c = self.Cos_theta_c(theta_e)
         cos_theta_e = np.cos(theta_e)
-        return 3/2*cos_theta_e*self.Dv_dec*(1/3*A/self.r_H*(1 - cos_theta_c**3) + 2/3*B/(self.r_H**2)*self.chi_edec*(self.chi_e*cos_theta_e-self.chi_c)* (1-cos_theta_c**3) + 1/2*B/(self.r_H**2)*self.chi_edec*(1-cos_theta_c**4))
+
+        if (self.chi_e*cos_theta_e - self.chi_edec >= self.chi_c) or (self.chi_e*cos_theta_e + self.chi_edec <= self.chi_c):
+            return np.zeros_like(theta_e)
+        else:
+            return 3/2*cos_theta_e*self.Dv_dec*(1/3*A/self.r_H*(1 - cos_theta_c**3) + 2/3*B/(self.r_H**2)*self.chi_edec*(self.chi_e*cos_theta_e-self.chi_c)* (1-cos_theta_c**3) + 1/2*B/(self.r_H**2)*self.chi_edec*(1-cos_theta_c**4))
+
+
+    def Psi_i_chia(self, a, theta_e):
+        A = self.A
+        B = self.B
+
+        chi_edec = rs.chifromz(1/a-1) - rs.chifromz(self.Z_e)
+        cos_theta_e = np.cos(theta_e)
+        cos_theta_c = (self.chi_c -self.chi_e*cos_theta_e)/chi_edec
+
+        return  3/2*cos_theta_e*(A/self.r_H*((self.chi_e*cos_theta_e-self.chi_c)*1/2*(1-cos_theta_c**2)+1/3*self.chi_edec*(1-cos_theta_c**3)) + B/(self.r_H**2)*((self.chi_e*cos_theta_e-self.chi_c)**2*1/2*(1-cos_theta_c**2) + (self.chi_e*cos_theta_e-self.chi_c)*self.chi_edec*2/3*(1-cos_theta_c**3) + 1/4*self.chi_edec**2*(1-cos_theta_c**4)))
+
 
     def Approx_Veff_ISW_radial(self, theta_e):
         a = np.logspace(np.log10(config.adec), np.log10(rs.az(self.Z_e)), kszpsz_config.transfer_integrand_sampling)
         chi_a = rs.Chia_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)
-        Deltachi = chi_a - self.chi_e
-        Deltachi[-1] = 0
 
-        integrand = rs.derv_Dpsi_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)*self.Psi_i_chia(a, theta_e)
+        Veff_ISW_radial = []
 
-        return 2*integrate.simps(integrand, a)
+        # need to select the range of Z_e, theta_e and a
+
+        for theta_e_i in theta_e:
+            integrand = rs.derv_Dpsi_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)*self.Psi_i_chia(a, theta_e_i)
+
+            Veff_ISW_radial.append(2*integrate.simps(integrand, a))
+
+        return self.Psi_i_chia(a, theta_e_i)
+
+        # return np.array(Veff_ISW_radial)
