@@ -27,11 +27,11 @@ class BubbleCollision_Veff():
         self.Dv_dec = rs.Dv_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(1/(1+config.zdec))
 
     def Cos_theta_c(self, theta_e):
-        Cos_theta_c = (self.chi_c -self.chi_e*np.cos(theta_e))/self.chi_edec
-        Cos_theta_c[np.where(abs(Cos_theta_c)>=1)] = 1
+        cos_theta_c = (self.chi_c -self.chi_e*np.cos(theta_e))/self.chi_edec
+        cos_theta_c[np.where(abs(cos_theta_c)>=1)] = 1
         # if (self.chi_e*cos_theta_e - self.chi_edec >= self.chi_c) or (self.chi_e*cos_theta_e + self.chi_edec <= self.chi_c):
 
-        return Cos_theta_c
+        return cos_theta_c
 
     def Approx_Veff_SW_radial(self, theta_e):
         # need to select the range of Z_e and theta_e
@@ -59,10 +59,7 @@ class BubbleCollision_Veff():
         cos_theta_c = self.Cos_theta_c(theta_e)
         cos_theta_e = np.cos(theta_e)
 
-        if (self.chi_e*cos_theta_e - self.chi_edec >= self.chi_c) or (self.chi_e*cos_theta_e + self.chi_edec <= self.chi_c):
-            return np.zeros_like(theta_e)
-        else:
-            return 3/2*cos_theta_e*self.Dv_dec*(1/3*A/self.r_H*(1 - cos_theta_c**3) + 2/3*B/(self.r_H**2)*self.chi_edec*(self.chi_e*cos_theta_e-self.chi_c)* (1-cos_theta_c**3) + 1/2*B/(self.r_H**2)*self.chi_edec*(1-cos_theta_c**4))
+        return 3/2*cos_theta_e*self.Dv_dec*(1/3*A/self.r_H*(1 - cos_theta_c**3) + 2/3*B/(self.r_H**2)*self.chi_edec*(self.chi_e*cos_theta_e-self.chi_c)* (1-cos_theta_c**3) + 1/2*B/(self.r_H**2)*self.chi_edec*(1-cos_theta_c**4))
 
 
     def Psi_i_chia(self, a, theta_e):
@@ -73,6 +70,9 @@ class BubbleCollision_Veff():
         cos_theta_e = np.cos(theta_e)
         cos_theta_c = (self.chi_c -self.chi_e*cos_theta_e)/chi_edec
 
+        cos_theta_c[np.where(abs(cos_theta_c)>=1)] = 1
+
+        # return cos_theta_c
         return  3/2*cos_theta_e*(A/self.r_H*((self.chi_e*cos_theta_e-self.chi_c)*1/2*(1-cos_theta_c**2)+1/3*self.chi_edec*(1-cos_theta_c**3)) + B/(self.r_H**2)*((self.chi_e*cos_theta_e-self.chi_c)**2*1/2*(1-cos_theta_c**2) + (self.chi_e*cos_theta_e-self.chi_c)*self.chi_edec*2/3*(1-cos_theta_c**3) + 1/4*self.chi_edec**2*(1-cos_theta_c**4)))
 
 
@@ -89,6 +89,9 @@ class BubbleCollision_Veff():
 
             Veff_ISW_radial.append(2*integrate.simps(integrand, a))
 
-        return self.Psi_i_chia(a, theta_e_i)
+        # return self.Psi_i_chia(a, theta_e_i)
 
-        # return np.array(Veff_ISW_radial)
+        return np.array(Veff_ISW_radial)
+
+    def Approx_Veff_radial(self, theta_e):
+        return self.Approx_Veff_SW_radial(theta_e) + self.Approx_Veff_ISW_radial(theta_e) + self.Approx_Veff_decDopp_radial(theta_e) + self.Approx_Veff_localDopp_radial(theta_e)
