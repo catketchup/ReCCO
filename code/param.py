@@ -10,7 +10,7 @@ c = 3.e5 #kms^-1
 
 z_c = 0
 r_H = c/config.H0 # Mpc
-direction = 'x'
+direction = 'z'
 
 # initial potential from bubble collision psi_i parametried by A and B, Eq.2.2
 # A = 1.e-4 # 1-sigma limit
