@@ -6,8 +6,7 @@ from math import pi
 
 def ThreeDEvolve(G_itp, input_g_field_k, kk):
     # here kk should be in 1/Mpc
-    zero_index = np.where(kk==0)
-    kk[zero_index] = 1
+    kk[np.where(kk==0)] = kk.mean()
     output_field_k = G_itp(kk)*input_g_field_k/kk
     # output_field_k[zero_index] =
 
