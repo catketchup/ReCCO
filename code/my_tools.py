@@ -25,29 +25,20 @@ class Evolve():
         return np.fft.ifftn(output_field_k)
 
 
-    def RDF_Evolve(self, name, input_field_k, kk_component, itp='False', ks='None'):
-        if itp =='True':
-            kk = ks
-        else:
-            kk = self.kk
-
-        T = rs.T(kk, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+    def RDF_Evolve(self, name, input_field_k, kk_component):
 
         if name=='SW':
-            G_k = T*rs.G_SW_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+            G_k =self.T*rs.G_SW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='localDopp':
-            G_k = T*rs.G_localDopp_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+            G_k = self.T*rs.G_localDopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='Dopp':
-            G_k = T*rs.G_Dopp_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+            G_k = self.T*rs.G_Dopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='ISW':
-            G_k = T*rs.G_ISW_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-
-
-        if itp =='True':
-            G_k = interp1d(ks, G_k)(self.kk)
-
+            G_k = self.T*rs.G_ISW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
 
         return np.array([self.ThreeD_Evolve(G_k*kk_component[0]/self.kk,input_field_k), self.ThreeD_Evolve(G_k*kk_component[1]/self.kk,input_field_k), self.ThreeD_Evolve(G_k*kk_component[2]/self.kk,input_field_k)])
+
+    
 
     def RDF_g_Evolve(self, name, input_g_field_k):
 
@@ -64,7 +55,7 @@ class Evolve():
 
         return np.array([self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[0]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[1]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[2])])
 
-    
+
 
     def RQF_g_Evolve(self, name, input_g_field_k):
 
