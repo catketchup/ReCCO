@@ -429,6 +429,13 @@ def G_SW_ksz(k, ze, Omega_b, Omega_c, w, wa, Omega_K, h):
     # G_SW_ksz = 3 * (2 * Dpsi(Omega_b, Omega_c, w, wa, Omega_K, h)
     #                 [0] - 3 / 2)
 
+    # G_SW_ksz = 3 * (2 * Dpsi(Omega_b, Omega_c, w, wa, Omega_K, h)
+    #                 [0] - 3 / 2)*(np.sin(k * (chidec - chie))/(k * (chidec - chie))**2)
+
+    # G_SW_ksz = 3 * (2 * Dpsi(Omega_b, Omega_c, w, wa, Omega_K, h)
+    #                 [0] - 3 / 2)*(-np.cos(k * (chidec - chie))/(k * (chidec - chie)))
+
+
     return G_SW_ksz
 
 
