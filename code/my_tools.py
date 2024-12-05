@@ -9,7 +9,7 @@ importlib.reload(rs)
 class Evolve():
     def __init__(self, kk, ze, Omega_b, Omega_c, w, wa, Omega_K, h):
         self.kk = kk
-        self.kk[np.where(kk==0)] = kk.mean()
+        # self.kk[np.where(kk==0)] = kk.mean()
         self.ze = ze
         self.Omega_b = Omega_b
         self.Omega_c = Omega_c
@@ -36,7 +36,14 @@ class Evolve():
         elif name=='ISW':
             G_k = self.T*rs.G_ISW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
 
-        return np.array([self.ThreeD_Evolve(G_k*kk_component[0]/self.kk,input_field_k), self.ThreeD_Evolve(G_k*kk_component[1]/self.kk,input_field_k), self.ThreeD_Evolve(G_k*kk_component[2]/self.kk,input_field_k)])
+        dir_x = 1j*kk_component[0]/self.kk
+        dir_x[np.where(self.kk==0)] = 0
+        dir_y = 1j*kk_component[1]/self.kk
+        dir_y[np.where(self.kk==0)] = 0
+        dir_z = 1j*kk_component[2]/self.kk
+        dir_z[np.where(self.kk==0)] = 0
+
+        return np.array([self.ThreeD_Evolve(G_k*dir_x, input_field_k), self.ThreeD_Evolve(G_k*dir_y,input_field_k), self.ThreeD_Evolve(G_k*dir_z,input_field_k)])
 
     
 
