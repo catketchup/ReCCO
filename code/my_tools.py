@@ -24,6 +24,23 @@ class Evolve():
         output_field_k = G_k*input_field_k
         return np.fft.ifftn(output_field_k)
 
+    def RDF_g_Evolve(self, name, input_g_field_k):
+
+        if name=='SW':
+            G_k = self.T*rs.G_SW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+        elif name=='localDopp':
+            G_k = self.T*rs.G_localDopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+        elif name=='decDopp':
+            G_k = self.T*rs.G_decDopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+        elif name=='Dopp':
+            G_k = self.T*rs.G_Dopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+        elif name=='ISW':
+            G_k = self.T*rs.G_ISW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+        elif name=='total':
+            G_k = self.T*rs.G_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+
+        return np.array([self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[0]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[1]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[2])])
+
 
     def RDF_Evolve(self, name, input_field_k, kk_component):
 
@@ -31,6 +48,8 @@ class Evolve():
             G_k =self.T*rs.G_SW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='localDopp':
             G_k = self.T*rs.G_localDopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+        elif name=='decDopp':
+            G_k = self.T*rs.G_decDopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='Dopp':
             G_k = self.T*rs.G_Dopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='ISW':
@@ -45,31 +64,11 @@ class Evolve():
 
         return np.array([self.ThreeD_Evolve(G_k*dir_x, input_field_k), self.ThreeD_Evolve(G_k*dir_y,input_field_k), self.ThreeD_Evolve(G_k*dir_z,input_field_k)])
 
-    
 
-    def RDF_g_Evolve(self, name, input_g_field_k):
-
-        if name=='SW':
-            G_k = self.T*rs.G_SW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-        elif name=='localDopp':
-            G_k = self.T*rs.G_localDopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-        elif name=='Dopp':
-            G_k = self.T*rs.G_Dopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-        elif name=='ISW':
-            G_k = self.T*rs.G_ISW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-        elif name=='total':
-            G_k = self.T*rs.G_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-
-        return np.array([self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[0]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[1]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[2])])
-
-
-
-    def RQF_g_Evolve(self, name, input_g_field_k):
+    def RQF_Evolve(self, name, input_field_k, kk_component):
 
         if name=='SW':
             G_k = self.T*rs.G_SW_psz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-        elif name=='localDopp':
-            G_k = self.T*rs.G_localDopp_psz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='Dopp':
             G_k = self.T*rs.G_Dopp_psz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='ISW':
@@ -77,38 +76,22 @@ class Evolve():
         elif name=='total':
             G_k = self.T*rs.G_psz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
 
-        return np.array([self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[0]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[1]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[2])])
+        factor = 1/4*np.sqrt(5/pi)*(3*kk_component[2]**2/self.kk**2 -1)
+        factor[np.where(self.kk==0)] = 0
 
+        # set z-direction as the axis
+        return self.ThreeD_Evolve(factor*G_k, input_field_k)
 
+    def RQF_Projection(self, grid, RQF_3d, points):
+        return RegularGridInterpolator(grid, RQF_3d)(points)
 
-    # def RDF_g_Evolve(self, name, input_g_field_k, itp='False', ks='None'):
-    #     if itp =='True':
-    #         kk = ks
-    #     else:
-    #         kk = self.kk
+    def RQF_Projection_Radial(self, grid, RDF_3d, points, angle):
+        # set z-direction as the axis
+        theta = angle[0]
+        phi = angle[1]
+        RQF = self.RQF_Projection(grid, RDF_3d, points)
 
-    #     T = rs.T(kk, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-
-    #     if name=='SW':
-    #         G_k = T*rs.G_SW_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-    #     elif name=='localDopp':
-    #         G_k = T*rs.G_localDopp_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-    #     elif name=='Dopp':
-    #         G_k = T*rs.G_Dopp_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-    #     elif name=='ISW':
-    #         G_k = T*rs.G_ISW_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-    #     elif name=='total':
-    #         G_k = T*rs.G_ksz(kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
-
-    #     if itp =='True':
-    #         G_k = interp1d(ks, G_k)(self.kk)
-
-    #     return np.array([self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[0]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[1]), self.ThreeD_Evolve(G_k/self.kk, input_g_field_k[2])])
-
-
-
-
-
+        return 3/4*np.sqrt(5/(6*pi))*np.sin(theta)**2*RQF
 
 
     def ThreeDVec_Projection(self, grid, RDF_3d, points):
