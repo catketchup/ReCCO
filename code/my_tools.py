@@ -54,6 +54,10 @@ class Evolve():
             G_k = self.T*rs.G_Dopp_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
         elif name=='ISW':
             G_k = self.T*rs.G_ISW_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+        elif name=='total':
+            G_k = self.T*rs.G_ksz(self.kk, self.ze, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)
+
+
 
         dir_x = 1j*kk_component[0]/self.kk
         dir_x[np.where(self.kk==0)] = 0
