@@ -8,7 +8,7 @@ import numpy as np
 
 # N_bins = 32 #number of red shift bins, uniform in conformal distance.
 
-transfer_integrand_sampling = 500
+transfer_integrand_sampling = 1000
 
 ################ halomodel
 

@@ -329,8 +329,8 @@ def T(k, Omega_b, Omega_c, w, wa, Omega_K, h):
     x[np.where(x<1.0e-10)] = 1
     T = (np.log(1 + 0.171 * x) / (0.171 * x)) * (1 + 0.284 * x
       + (1.18 * x)**2 + (0.399 * x)**3 + (0.49 * x)**4)**(-0.25)
-    return 1
-    # return T
+
+    return T
 
 
 

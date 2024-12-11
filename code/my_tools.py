@@ -7,7 +7,7 @@ import importlib
 importlib.reload(rs)
 
 class Evolve():
-    def __init__(self, kk, ze, Omega_b, Omega_c, w, wa, Omega_K, h):
+    def __init__(self, kk, ze, Omega_b, Omega_c, w, wa, Omega_K, h, use_transfer=True):
         self.kk = kk
         # self.kk[np.where(kk==0)] = kk.mean()
         self.ze = ze
@@ -17,8 +17,10 @@ class Evolve():
         self.wa = wa
         self.Omega_K = Omega_K
         self.h = h
-        self.T = rs.T(kk, Omega_b, Omega_c, w, wa, Omega_K, h)
-
+        if use_transfer:
+            self.T = rs.T(kk, Omega_b, Omega_c, w, wa, Omega_K, h)
+        else:
+            self.T = 1
 
     def ThreeD_Evolve(self, G_k, input_field_k):
         output_field_k = G_k*input_field_k
