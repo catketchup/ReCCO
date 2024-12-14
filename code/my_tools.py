@@ -61,14 +61,14 @@ class Evolve():
 
 
 
-        dir_x = 1j*kk_component[0]/self.kk
-        dir_x[np.where(self.kk==0)] = 0
-        dir_y = 1j*kk_component[1]/self.kk
-        dir_y[np.where(self.kk==0)] = 0
-        dir_z = 1j*kk_component[2]/self.kk
-        dir_z[np.where(self.kk==0)] = 0
+        factor_x = 1j*kk_component[0]/self.kk
+        factor_x[np.where(self.kk==0)] = 0
+        factor_y = 1j*kk_component[1]/self.kk
+        factor_y[np.where(self.kk==0)] = 0
+        factor_z = 1j*kk_component[2]/self.kk
+        factor_z[np.where(self.kk==0)] = 0
 
-        return np.array([self.ThreeD_Evolve(G_k*dir_x, input_field_k), self.ThreeD_Evolve(G_k*dir_y,input_field_k), self.ThreeD_Evolve(G_k*dir_z,input_field_k)])
+        return np.array([self.ThreeD_Evolve(G_k*factor_x, input_field_k), self.ThreeD_Evolve(G_k*factor_y,input_field_k), self.ThreeD_Evolve(G_k*factor_z,input_field_k)])
 
 
     def RQF_Evolve(self, name, input_field_k, kk_component):

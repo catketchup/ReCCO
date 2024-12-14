@@ -89,19 +89,16 @@ class BubbleCollision_RF():
 
 
     def Approx_RDF_ISW_radial(self, theta_e):
-        a = np.logspace(np.log10(config.adec), np.log10(rs.az(self.Z_e)), kszpsz_config.transfer_integrand_sampling)
+        # a = np.logspace(np.log10(config.adec), np.log10(rs.az(self.Z_e)), kszpsz_config.transfer_integrand_sampling)
+        a = np.linspace(config.adec, rs.az(self.Z_e), 500)
 
-        chi_a = rs.Chia_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)
-
-        Veff_ISW_radial = []
-
-        # need to select the range of Z_e, theta_e and a, which have been accounted for in Approx_RDF_SW_radial_a(a, theta_e_i)
+        RDF_ISW_radial = []
         for theta_e_i in theta_e:
             integrand = rs.derv_Dpsi_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)*self.Approx_RDF_SW_radial_a(a, theta_e_i)
 
-            Veff_ISW_radial.append(2*integrate.simps(integrand, a))
+            RDF_ISW_radial.append(2*integrate.simps(integrand, a))
 
-        return np.array(Veff_ISW_radial)
+        return np.array(RDF_ISW_radial)
 
     def Approx_RDF_radial(self, theta_e):
         return self.Approx_RDF_SW_radial(theta_e) + self.Approx_RDF_ISW_radial(theta_e) + self.Approx_RDF_decDopp_radial(theta_e) + self.Approx_RDF_localDopp_radial(theta_e)
@@ -147,10 +144,8 @@ class BubbleCollision_RF():
 
     def Approx_RQF_ISW(self, theta_e):
         a = np.logspace(np.log10(config.adec), np.log10(rs.az(self.Z_e)), kszpsz_config.transfer_integrand_sampling)
-        chi_a = rs.Chia_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)
 
         RQF_ISW = []
-
         for theta_e_i in theta_e:
             integrand = rs.derv_Dpsi_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)*self.Approx_RQF_SW_a(a, theta_e_i)
 
