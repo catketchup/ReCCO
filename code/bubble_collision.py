@@ -8,6 +8,8 @@ import scipy.integrate as integrate
 import importlib
 importlib.reload(kszpsz_config)
 
+class BubbleCollision_RF_sym():
+
 class BubbleCollision_RF():
     "Bubble-collision induced remote fields (RF) including remote dipole field (RDF) and remote quadrupole field (RQF)"
     def __init__(self, A, B, Z_c, Z_e, Omega_b, Omega_c, w, wa, Omega_K, h):
@@ -36,7 +38,10 @@ class BubbleCollision_RF():
             theta_e = np.array([theta_e])
 
         cos_theta_c = (self.chi_c -self.chi_e*np.cos(theta_e))/self.chi_edec
-        cos_theta_c[np.where(abs(cos_theta_c)>=1)] = 1
+        # cos_theta_c[np.where(abs(cos_theta_c)>=1)] = 1
+        cos_theta_c[np.where(self.chi_e*np.cos(theta_e)+self.chi_edec-self.chi_c)<0)] = 1
+
+        cos_theta_c[np.where(self.chi_e*np.cos(theta_e)-self.chi_edec-self.chi_c)>0)] = -1
 
         return cos_theta_c
 
