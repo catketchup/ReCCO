@@ -1,10 +1,9 @@
 from sympy import *
 import numpy as np
-from math import pi
 import my_remote_spectra as rs
 import config as config
 import kszpsz_config
-import scipy.integrate as integrate
+
 
 import importlib
 importlib.reload(kszpsz_config)
@@ -32,22 +31,26 @@ class BubbleCollision_RF_sym():
         self.Dv_e = rs.Dv_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(1/(1+Z_e))
         self.Dv_dec = rs.Dv_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(1/(1+config.zdec))
 
-    def check_remote_region(self, theta_e_1d=None):
-        if not np.any(theta_e_1d):
-            theta_e_1d = np.arange(0,181,1)
+    def check_remote_region(self, theta_e_deg_1d=None):
+        if not np.any(theta_e_deg_1d):
+            theta_e_deg_1d = np.linspace(0,180,100)
 
+        theta_e_1d = np.deg2rad(theta_e_deg_1d)
         d1 = self.chi_e*np.cos(theta_e_1d) + self.Delta_chi_dec - self.chi_c
         d2 = self.chi_e*np.cos(theta_e_1d) - self.Delta_chi_dec - self.chi_c
 
-        self.remote_region = [theta_e_1d[np.where((d1>0)&(d2<0))], theta_e_1d[np.where((d2>0))], theta_e_1d[np.where((d1<0))]]
-        self.remote_region_exist = Array([np.any(self.region[0]), np.any(self.region[1]), np.any(self.region[2])])
+        self.remote_region = [theta_e_deg_1d[np.where((d1>0)&(d2<0))], theta_e_deg_1d[np.where((d2>0))], theta_e_deg_1d[np.where((d1<0))]]
+        self.remote_region_exist = Array([np.any(self.remote_region[0]), np.any(self.remote_region[1]), np.any(self.remote_region[2])])
 
-        return self.region
+        # return self.remote_region
+        return [d1, d2]
 
-    def check_local_region(self, theta_e_1d=None):
-        if not np.any(theta_e_1d):
-            theta_e_1d = np.arange(0,181,1)
-        self.local_region = [theta_e_1d[np.where(self.chi_e*np.cos(theta_e_1d)>self.chi_c)], theta_e_1d[np.where(self.chi_e*np.cos(theta_e_1d)<self.chi_c)]]
+    def check_local_region(self, theta_e_deg_1d=None):
+        if not np.any(theta_e_deg_1d):
+            theta_e_deg_1d = np.linspace(0,180,100)
+
+        theta_e_1d = np.deg2rad(theta_e_deg_1d)
+        self.local_region = [theta_e_deg_1d[np.where(self.chi_e*np.cos(theta_e_1d)>self.chi_c)], theta_e_deg_1d[np.where(self.chi_e*np.cos(theta_e_1d)<self.chi_c)]]
 
         return self.local_region
 
@@ -70,7 +73,7 @@ class BubbleCollision_RF_sym():
         str_Y_l2m0 = '(1/2)*sqrt(3/(pi))*cos(theta_e)'
         return sympify(str_Y_l2m0, evaluate=False)
 
-    def RDF_eff_SW(self):
+    def RDF_eff_SW(self, evaluate=False):
         str_RDF_eff_SW = []
         for i in range(3):
             str_RDF_eff_SW.append(f'(2*D_psi_dec-3/2)*3/2*cos(theta_e)*(A/r_H*((chi_e*cos(theta_e)-chi_c)*\
@@ -79,26 +82,26 @@ class BubbleCollision_RF_sym():
             (chi_e*cos(theta_e)-chi_c)*Delta_chi_dec*2/3*({self.Delta_cos_theta_c_n(3)[i]}) + \
             1/4*Delta_chi_dec**2*({self.Delta_cos_theta_c_n(4)[i]})))')
 
-        return Array(sympify(str_RDF_eff_SW, evaluate=True))
+        return Array(sympify(str_RDF_eff_SW, evaluate=evaluate))
 
-    def RDF_eff_decDopp(self):
+    def RDF_eff_decDopp(self, evaluate=False):
         str_RDF_eff_decDopp = []
         for i in range(3):
             str_RDF_eff_decDopp.append(f'(3/2)*cos(theta_e)*D_v_dec*(1/3*A/r_H*({self.Delta_cos_theta_c_n(3)[i]}) + \
             2/3*B/(r_H**2)*(chi_e*cos(theta_e)-chi_c)* ({self.Delta_cos_theta_c_n(3)[i]}) + \
             1/2*B/(r_H**2)*chi_edec*({self.Delta_cos_theta_c_n(4)[i]}))')
 
-        return Array(sympify(str_RDF_eff_decDopp, evaluate=True))
+        return Array(sympify(str_RDF_eff_decDopp, evaluate=evaluate))
 
-    def RDF_eff_localDopp(self):
+    def RDF_eff_localDopp(self, evaluate=False):
         str_RDF_eff_localDopp = []
         str_RDF_eff_localDopp.append(f'D_v_e/(r_H)*cos(theta_e)*(A + 2*B/(r_H)*(chi_e*cos(theta_e) - chi_c))')
         str_RDF_eff_localDopp.append(0)
 
-        return Array(sympify(str_RDF_eff_localDopp, evaluate=True))
+        return Array(sympify(str_RDF_eff_localDopp, evaluate=evaluate))
 
 
-    def RQF_eff_SW(self):
+    def RQF_eff_SW(self, evaluate=False):
         str_RQF_eff_SW = []
         for i in range(3):
             str_RQF_eff_SW.append(f'(2* D_psi_dec - 3/2)*5*sqrt(6)/16*sin(theta_e)**2*\
@@ -113,9 +116,9 @@ class BubbleCollision_RF_sym():
             Delta_chi_dec*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(2)[i]}) - \
             (chi_e*cos(theta_e)-chi_c)**2*({self.Delta_cos_theta_c_n(1)[i]})))')
 
-        return Array(sympify(str_RQF_eff_SW, evaluate=True))
+        return Array(sympify(str_RQF_eff_SW, evaluate=evaluate))
 
-    def RQF_eff_Dopp(self):
+    def RQF_eff_Dopp(self, evaluate=False):
         str_RQF_eff_Dopp = []
         for i in range(3):
             str_RQF_eff_Dopp.append(f'D_v_dec*5*sqrt(6)/16*sin(theta_e)**2*\
@@ -126,21 +129,30 @@ class BubbleCollision_RF_sym():
             1/3*Delta_chi_dec*({self.Delta_cos_theta_c_n(3)[i]}) - \
             1/2*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(2)[i]})))')
 
-        return Array(sympify(str_RQF_eff_Dopp, evaluate=True))
+        return Array(sympify(str_RQF_eff_Dopp, evaluate=evaluate))
 
-    def v_l1m0_sym(self, name):
+    def v_l1m0_sym(self, name, evaluate=False):
         theta_e = Symbol('theta_e')
         if name == 'SW':
-            RDF = self.RDF_eff_SW()
-        elif name == 'Dopp':
-            RDF = self.RDF_eff_Dopp()
+            RDF = self.RDF_eff_SW(evaluate=False)
+            region_num = 3
+        elif name == 'localDopp':
+            RDF = self.RDF_eff_localDopp(evaluate=False)
+            region_num = 2
 
-        return integrate(2*pi*sin(theta_e)*Y_l1m0()*RDF, theta_e)
+        v_l1m0 = []
+        for i in range(region_num):
+            v_l1m0.append(integrate(2*pi*sin(theta_e)*self.Y_l1m0()*RDF[i], theta_e))
+        return Array(v_l1m0)
 
-    def q_s2l2m0_sym(self, name):
+    def q_s2l1m0_sym(self, name, evaluate=False):
         theta_e = Symbol('theta_e')
         if name == 'SW':
-            RQF = self.RQF_eff_SW()
+            RQF = self.RQF_eff_SW(evaluate=False)
         elif name == 'Dopp':
-            RQF = self.RQF_eff_Dopp()
-        return integrate(2*pi*sin(theta_e)*Y_s2l2m0()*RQF, theta_e)
+            RQF = self.RQF_eff_Dopp(evaluate=False)
+
+        q_s2l2m0 = []
+        for i in range(3):
+            q_s2l2m0.append(integrate(2*pi*sin(theta_e)*self.Y_s2l2m0()*RQF[i], theta_e))
+        return Array(q_s2l2m0)
