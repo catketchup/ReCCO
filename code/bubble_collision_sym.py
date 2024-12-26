@@ -42,15 +42,16 @@ class BubbleCollision_RF_sym():
         self.remote_region = [theta_e_deg_1d[np.where((d1>0)&(d2<0))], theta_e_deg_1d[np.where((d2>0))], theta_e_deg_1d[np.where((d1<0))]]
         self.remote_region_exist = Array([np.any(self.remote_region[0]), np.any(self.remote_region[1]), np.any(self.remote_region[2])])
 
-        # return self.remote_region
-        return [d1, d2]
+        return self.remote_region
+
 
     def check_local_region(self, theta_e_deg_1d=None):
         if not np.any(theta_e_deg_1d):
             theta_e_deg_1d = np.linspace(0,180,100)
 
         theta_e_1d = np.deg2rad(theta_e_deg_1d)
-        self.local_region = [theta_e_deg_1d[np.where(self.chi_e*np.cos(theta_e_1d)>self.chi_c)], theta_e_deg_1d[np.where(self.chi_e*np.cos(theta_e_1d)<self.chi_c)]]
+        d = self.chi_e*np.cos(theta_e_1d) - self.chi_c
+        self.local_region = [theta_e_deg_1d[np.where(d>0)], theta_e_deg_1d[np.where(d<0)]]
 
         return self.local_region
 
@@ -145,7 +146,7 @@ class BubbleCollision_RF_sym():
             v_l1m0.append(integrate(2*pi*sin(theta_e)*self.Y_l1m0()*RDF[i], theta_e))
         return Array(v_l1m0)
 
-    def q_s2l1m0_sym(self, name, evaluate=False):
+    def q_s2l2m0_sym(self, name, evaluate=False):
         theta_e = Symbol('theta_e')
         if name == 'SW':
             RQF = self.RQF_eff_SW(evaluate=False)
@@ -156,3 +157,7 @@ class BubbleCollision_RF_sym():
         for i in range(3):
             q_s2l2m0.append(integrate(2*pi*sin(theta_e)*self.Y_s2l2m0()*RQF[i], theta_e))
         return Array(q_s2l2m0)
+
+    def v_l1m0(self, name):
+        self.re
+
