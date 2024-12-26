@@ -30,6 +30,8 @@ class BubbleCollision_RF_sym():
         self.Dpsi_dec = rs.Dpsi_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(1/(1+config.zdec))
         self.Dv_e = rs.Dv_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(1/(1+Z_e))
         self.Dv_dec = rs.Dv_inter(Omega_b, Omega_c, w, wa, Omega_K, h)(1/(1+config.zdec))
+        self.check_local_region()
+        self.check_remote_region()
 
     def check_remote_region(self, theta_e_deg_1d=None):
         if not np.any(theta_e_deg_1d):
@@ -52,6 +54,7 @@ class BubbleCollision_RF_sym():
         theta_e_1d = np.deg2rad(theta_e_deg_1d)
         d = self.chi_e*np.cos(theta_e_1d) - self.chi_c
         self.local_region = [theta_e_deg_1d[np.where(d>0)], theta_e_deg_1d[np.where(d<0)]]
+        self.local_region_exist = Array([np.any(self.local_region[0]), np.any(self.local_region[1])])
 
         return self.local_region
 
@@ -90,7 +93,7 @@ class BubbleCollision_RF_sym():
         for i in range(3):
             str_RDF_eff_decDopp.append(f'(3/2)*cos(theta_e)*D_v_dec*(1/3*A/r_H*({self.Delta_cos_theta_c_n(3)[i]}) + \
             2/3*B/(r_H**2)*(chi_e*cos(theta_e)-chi_c)* ({self.Delta_cos_theta_c_n(3)[i]}) + \
-            1/2*B/(r_H**2)*chi_edec*({self.Delta_cos_theta_c_n(4)[i]}))')
+            1/2*B/(r_H**2)*Delta_chi_dec*({self.Delta_cos_theta_c_n(4)[i]}))')
 
         return Array(sympify(str_RDF_eff_decDopp, evaluate=evaluate))
 
@@ -119,10 +122,10 @@ class BubbleCollision_RF_sym():
 
         return Array(sympify(str_RQF_eff_SW, evaluate=evaluate))
 
-    def RQF_eff_Dopp(self, evaluate=False):
-        str_RQF_eff_Dopp = []
+    def RQF_eff_decDopp(self, evaluate=False):
+        str_RQF_eff_decDopp = []
         for i in range(3):
-            str_RQF_eff_Dopp.append(f'D_v_dec*5*sqrt(6)/16*sin(theta_e)**2*\
+            str_RQF_eff_decDopp.append(f'D_v_dec*5*sqrt(6)/16*sin(theta_e)**2*\
             (A/r_H*(3/4*({self.Delta_cos_theta_c_n(4)[i]}) \
             - 1/2*({self.Delta_cos_theta_c_n(2)[i]})) \
             + 2*B/(r_H**2)*(3/5*Delta_chi_dec*({self.Delta_cos_theta_c_n(5)[i]}) + \
@@ -130,13 +133,20 @@ class BubbleCollision_RF_sym():
             1/3*Delta_chi_dec*({self.Delta_cos_theta_c_n(3)[i]}) - \
             1/2*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(2)[i]})))')
 
-        return Array(sympify(str_RQF_eff_Dopp, evaluate=evaluate))
+        return Array(sympify(str_RQF_eff_decDopp, evaluate=evaluate))
 
     def v_l1m0_sym(self, name, evaluate=False):
         theta_e = Symbol('theta_e')
+
+
         if name == 'SW':
             RDF = self.RDF_eff_SW(evaluate=False)
             region_num = 3
+
+        elif name == 'decDopp':
+            RDF = self.RDF_eff_decDopp(evaluate=False)
+            region_num = 3
+
         elif name == 'localDopp':
             RDF = self.RDF_eff_localDopp(evaluate=False)
             region_num = 2
@@ -150,8 +160,8 @@ class BubbleCollision_RF_sym():
         theta_e = Symbol('theta_e')
         if name == 'SW':
             RQF = self.RQF_eff_SW(evaluate=False)
-        elif name == 'Dopp':
-            RQF = self.RQF_eff_Dopp(evaluate=False)
+        elif name == 'decDopp':
+            RQF = self.RQF_eff_decDopp(evaluate=False)
 
         q_s2l2m0 = []
         for i in range(3):
@@ -159,5 +169,75 @@ class BubbleCollision_RF_sym():
         return Array(q_s2l2m0)
 
     def v_l1m0(self, name):
-        self.re
+        A = Symbol('A')
+        B = Symbol('B')
+        r_H = Symbol('r_H')
+        chi_c = Symbol('chi_c')
+        chi_e = Symbol('chi_e')
+        chi_dec = Symbol('chi_dec')
+        Delta_chi_dec = Symbol('Delta_chi_dec')
+        theta_e = Symbol('theta_e')
 
+        if name == 'SW':
+            D_dec = Symbol('D_psi_dec')
+            D_dec_num = self.Dpsi_dec
+            region = self.remote_region
+            region_exist = self.remote_region_exist
+
+        elif name == 'decDopp':
+            D_dec = Symbol('D_v_dec')
+            D_dec_num = self.Dv_dec
+            region = self.remote_region
+            region_exist = self.remote_region_exist
+
+        elif name == 'localDopp':
+            D_dec = Symbol('D_v_e')
+            D_dec_num = self.Dv_e
+            region = self.local_region
+            region_exist = self.local_region_exist
+
+        v_l1m0 = 0
+        for i in range(len(region)):
+            if region_exist[i]:
+                upper = np.deg2rad(region[i][-1])
+                lower = np.deg2rad(region[i][0])
+                v_l1m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.v_l1m0_sym(name)[i])
+                v_l1m0 += v_l1m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - v_l1m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
+            else:
+                continue
+
+        return v_l1m0
+
+
+    def q_s2l2m0(self, name):
+        A = Symbol('A')
+        B = Symbol('B')
+        r_H = Symbol('r_H')
+        chi_c = Symbol('chi_c')
+        chi_e = Symbol('chi_e')
+        chi_dec = Symbol('chi_dec')
+        Delta_chi_dec = Symbol('Delta_chi_dec')
+        theta_e = Symbol('theta_e')
+
+        if name == 'SW':
+            D_dec = Symbol('D_psi_dec')
+            D_dec_num = self.Dpsi_dec
+
+        elif name == 'decDopp':
+            D_dec = Symbol('D_v_dec')
+            D_dec_num = self.Dv_dec
+
+        region = self.remote_region
+        region_exist = self.remote_region_exist
+
+        q_s2l2m0 = 0
+        for i in range(len(region)):
+            if region_exist[i]:
+                upper = np.deg2rad(region[i][-1])
+                lower = np.deg2rad(region[i][0])
+                q_s2l2m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.q_s2l2m0_sym(name)[i])
+                q_s2l2m0 += q_s2l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - q_s2l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
+            else:
+                continue
+
+        return q_s2l2m0
