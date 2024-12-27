@@ -43,6 +43,7 @@ class BubbleCollision_RF_sym():
 
         self.remote_region = [theta_e_deg_1d[np.where((d1>0)&(d2<0))], theta_e_deg_1d[np.where((d2>0))], theta_e_deg_1d[np.where((d1<0))]]
         self.remote_region_exist = Array([np.any(self.remote_region[0]), np.any(self.remote_region[1]), np.any(self.remote_region[2])])
+        self.remote_region_bound = [[self.remote_region[0][0],  self.remote_region[0][-1]] if np.any(self.remote_region[0]) else [],  [self.remote_region[1][0],  self.remote_region[1][-1]] if np.any(self.remote_region[1]) else [], [self.remote_region[2][0], self.remote_region[2][-1]] if np.any(self.remote_region[2]) else []]
 
         return self.remote_region
 
@@ -55,6 +56,7 @@ class BubbleCollision_RF_sym():
         d = self.chi_e*np.cos(theta_e_1d) - self.chi_c
         self.local_region = [theta_e_deg_1d[np.where(d>0)], theta_e_deg_1d[np.where(d<0)]]
         self.local_region_exist = Array([np.any(self.local_region[0]), np.any(self.local_region[1])])
+        self.local_region_bound = [[self.local_region[0][0],  self.local_region[0][-1]] if np.any(self.local_region[0]) else [], [self.local_region[1][0], self.local_region[1][-1]] if np.any(self.local_region[1]) else []]
 
         return self.local_region
 
@@ -135,7 +137,7 @@ class BubbleCollision_RF_sym():
 
         return Array(sympify(str_RQF_eff_decDopp, evaluate=evaluate))
 
-    def v_l1m0_sym(self, name, evaluate=False):
+    def v_l1m0_at_bound_sym(self, name, evaluate=False):
         theta_e = Symbol('theta_e')
 
 
@@ -156,17 +158,17 @@ class BubbleCollision_RF_sym():
             v_l1m0.append(integrate(2*pi*sin(theta_e)*self.Y_l1m0()*RDF[i], theta_e))
         return Array(v_l1m0)
 
-    def q_s2l2m0_sym(self, name, evaluate=False):
+    def q_l2m0_at_bound_sym(self, name, evaluate=False):
         theta_e = Symbol('theta_e')
         if name == 'SW':
             RQF = self.RQF_eff_SW(evaluate=False)
         elif name == 'decDopp':
             RQF = self.RQF_eff_decDopp(evaluate=False)
 
-        q_s2l2m0 = []
+        q_l2m0 = []
         for i in range(3):
-            q_s2l2m0.append(integrate(2*pi*sin(theta_e)*self.Y_s2l2m0()*RQF[i], theta_e))
-        return Array(q_s2l2m0)
+            q_l2m0.append(integrate(2*pi*sin(theta_e)*self.Y_s2l2m0()*RQF[i], theta_e))
+        return Array(q_l2m0)
 
     def v_l1m0(self, name):
         A = Symbol('A')
@@ -201,7 +203,7 @@ class BubbleCollision_RF_sym():
             if region_exist[i]:
                 upper = np.deg2rad(region[i][-1])
                 lower = np.deg2rad(region[i][0])
-                v_l1m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.v_l1m0_sym(name)[i])
+                v_l1m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.v_l1m0_at_bound_sym(name)[i])
                 v_l1m0 += v_l1m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - v_l1m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
             else:
                 continue
@@ -209,7 +211,7 @@ class BubbleCollision_RF_sym():
         return v_l1m0
 
 
-    def q_s2l2m0(self, name):
+    def q_l2m0(self, name):
         A = Symbol('A')
         B = Symbol('B')
         r_H = Symbol('r_H')
@@ -230,14 +232,20 @@ class BubbleCollision_RF_sym():
         region = self.remote_region
         region_exist = self.remote_region_exist
 
-        q_s2l2m0 = 0
+        q_l2m0 = 0
         for i in range(len(region)):
             if region_exist[i]:
                 upper = np.deg2rad(region[i][-1])
                 lower = np.deg2rad(region[i][0])
-                q_s2l2m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.q_s2l2m0_sym(name)[i])
-                q_s2l2m0 += q_s2l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - q_s2l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
+                q_l2m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.q_l2m0_at_bound_sym(name)[i])
+                q_l2m0 += q_l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - q_l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
             else:
                 continue
 
-        return q_s2l2m0
+        return q_l2m0
+
+    def clvv_l1(self, name):
+        return self.v_l1m0(name)**2
+
+    def clqq_l2(self, name):
+        return self.q_l2m0(name)**2
