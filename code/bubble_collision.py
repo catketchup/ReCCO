@@ -37,7 +37,6 @@ class BubbleCollision_RF():
             theta_e = np.array([theta_e])
 
         cos_theta_c = (self.chi_c -self.chi_e*np.cos(theta_e))/self.chi_edec
-        # cos_theta_c[np.where(abs(cos_theta_c)>=1)] = 1
         cos_theta_c[np.where((self.chi_e*np.cos(theta_e)+self.chi_edec-self.chi_c)<0)] = 1
 
         cos_theta_c[np.where((self.chi_e*np.cos(theta_e)-self.chi_edec-self.chi_c)>0)] = -1
@@ -83,11 +82,11 @@ class BubbleCollision_RF():
         chi_edec = rs.chifromz(1/a-1) - rs.chifromz(self.Z_e)
         cos_theta_e = np.cos(theta_e)
 
-        # ensure chi_edec[-1] is not zero
-        # chi_edec[-1] = 1e-5
         cos_theta_c = (self.chi_c -self.chi_e*cos_theta_e)/chi_edec
-
-        cos_theta_c[np.where(abs(cos_theta_c)>=1)] = 1
+        cos_theta_c[np.where((self.chi_e*np.cos(theta_e)+chi_edec-\
+                              self.chi_c)<0)] = 1
+        cos_theta_c[np.where((self.chi_e*np.cos(theta_e)-chi_edec-\
+                              self.chi_c)>0)] = -1
 
         return 3/2*cos_theta_e*(A/self.r_H*((self.chi_e*cos_theta_e-self.chi_c)*1/2*self.Delta_cos_theta_c_n(cos_theta_c, 2)+1/3*chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 3)) + B/(self.r_H**2)*((self.chi_e*cos_theta_e-self.chi_c)**2*1/2*self.Delta_cos_theta_c_n(cos_theta_c, 2) + (self.chi_e*cos_theta_e-self.chi_c)*chi_edec*2/3*self.Delta_cos_theta_c_n(cos_theta_c, 3) + 1/4*chi_edec**2*self.Delta_cos_theta_c_n(cos_theta_c, 4)))
 
@@ -137,11 +136,11 @@ class BubbleCollision_RF():
         sin_theta_e = np.sin(theta_e)
         cos_theta_e = np.cos(theta_e)
 
-        # ensure chi_edec[-1] is not zero
-        # chi_edec[-1] = 1e-5
         cos_theta_c = (self.chi_c -self.chi_e*cos_theta_e)/chi_edec
-
-        cos_theta_c[np.where(abs(cos_theta_c)>=1)] = 1
+        cos_theta_c[np.where((self.chi_e*np.cos(theta_e)+chi_edec-\
+                              self.chi_c)<0)] = 1
+        cos_theta_c[np.where((self.chi_e*np.cos(theta_e)-chi_edec-\
+                              self.chi_c)>0)] = -1
 
         return 5*np.sqrt(6)/16*sin_theta_e**2*(A/self.r_H*(3/4*chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 4) + (self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 3) -1/2*chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 2) - (self.chi_e*cos_theta_e -self.chi_c)* self.Delta_cos_theta_c_n(cos_theta_c, 1)) + B/(self.r_H**2)*(3/5*chi_edec**2*self.Delta_cos_theta_c_n(cos_theta_c, 5) + 3/2*chi_edec*(self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 4) + 1/3*(-chi_edec**2 + 3*(self.chi_e*cos_theta_e-self.chi_c)**2)*self.Delta_cos_theta_c_n(cos_theta_c,3) - chi_edec*(self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 2) - (self.chi_e*cos_theta_e-self.chi_c)**2*self.Delta_cos_theta_c_n(cos_theta_c,1)))
 

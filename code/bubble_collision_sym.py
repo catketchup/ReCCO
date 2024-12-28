@@ -124,6 +124,24 @@ class BubbleCollision_RF_sym():
 
         return Array(sympify(str_RQF_eff_SW, evaluate=evaluate))
 
+
+    def RQF_eff_ISW(self, evaluate=False):
+        str_RQF_eff_ISW_integrand = []
+        for i in range(3):
+            str_RQF_eff_ISW_integrand.append(f'(2* D_psi - 3/2)*5*sqrt(6)/16*sin(theta_e)**2*\
+            (A/r_H*(3/4*Delta_chi*({self.Delta_cos_theta_c_n(4)[i]})\
+            + (chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(3)[i]}) \
+            -1/2*Delta_chi*({self.Delta_cos_theta_c_n(2)[i]}) - \
+            (chi_e*cos(theta_e) - chi_c)* ({self.Delta_cos_theta_c_n(1)[i]})) + \
+            B/(r_H**2)*(3/5*Delta_chi**2*({self.Delta_cos_theta_c_n(5)[i]}) + \
+            3/2*Delta_chi*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(4)[i]}) + \
+            1/3*(-Delta_chi**2 + \
+            3*(chi_e*cos(theta_e)-chi_c)**2)*({self.Delta_cos_theta_c_n(3)[i]}) - \
+            Delta_chi*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(2)[i]}) - \
+            (chi_e*cos(theta_e)-chi_c)**2*({self.Delta_cos_theta_c_n(1)[i]})))')
+
+        return Array(Integral(Derivative(Symbol('D_psi'), Symbol('a'))*Array(sympify(str_RQF_eff_ISW_integrand, evaluate=evaluate)), Symbol('a')))
+
     def RQF_eff_decDopp(self, evaluate=False):
         str_RQF_eff_decDopp = []
         for i in range(3):
