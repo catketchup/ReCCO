@@ -3,6 +3,8 @@ import numpy as np
 import my_remote_spectra as rs
 import config as config
 import kszpsz_config
+import bubble_collision as BC
+import scipy
 
 
 import importlib
@@ -35,7 +37,7 @@ class BubbleCollision_RF_sym():
 
     def check_remote_region(self, theta_e_deg_1d=None):
         if not np.any(theta_e_deg_1d):
-            theta_e_deg_1d = np.linspace(0,180,100)
+            theta_e_deg_1d = np.linspace(0,180,200)
 
         theta_e_1d = np.deg2rad(theta_e_deg_1d)
         d1 = self.chi_e*np.cos(theta_e_1d) + self.Delta_chi_dec - self.chi_c
@@ -50,7 +52,7 @@ class BubbleCollision_RF_sym():
 
     def check_local_region(self, theta_e_deg_1d=None):
         if not np.any(theta_e_deg_1d):
-            theta_e_deg_1d = np.linspace(0,180,100)
+            theta_e_deg_1d = np.linspace(0,180,200)
 
         theta_e_1d = np.deg2rad(theta_e_deg_1d)
         d = self.chi_e*np.cos(theta_e_1d) - self.chi_c
@@ -61,14 +63,19 @@ class BubbleCollision_RF_sym():
         return self.local_region
 
     # test calling symbolic function
-    def Cos_theta_c(self):
-        str_Cos_theta_c = ['(chi_c - chi_e*cos(theta_e))/(Delta_chi_dec)', -1, 1]
+    def Cos_theta_c(self, Delta_chi_at_a=False):
+        if Delta_chi_at_a==False:
+            str_Cos_theta_c = ['(chi_c - chi_e*cos(theta_e))/(Delta_chi_dec)', -1, 1]
+        else:
+            str_Cos_theta_c = ['(chi_c - chi_e*cos(theta_e))/(Delta_chi)', -1, 1]
         return Array(sympify(str_Cos_theta_c, evaluate=False))
 
-    def Delta_cos_theta_c_n(self, n):
+    def Delta_cos_theta_c_n(self, n, Delta_chi_at_a=False):
         str_Delta_cos_theta_c_n = []
+
         for i in range(3):
-            str_Delta_cos_theta_c_n.append(f'1 - ({self.Cos_theta_c()[i]})**{n}')
+            str_Delta_cos_theta_c_n.append(f'1 - ({self.Cos_theta_c(Delta_chi_at_a=Delta_chi_at_a)[i]})**{n}')
+
         return Array(sympify(str_Delta_cos_theta_c_n, evaluate=False))
 
     def Y_s2l2m0(self):
@@ -76,8 +83,8 @@ class BubbleCollision_RF_sym():
         return sympify(str_Y_s2l2m0, evaluate=False)
 
     def Y_l1m0(self):
-        str_Y_l2m0 = '(1/2)*sqrt(3/(pi))*cos(theta_e)'
-        return sympify(str_Y_l2m0, evaluate=False)
+        str_Y_l1m0 = '(1/2)*sqrt(3/(pi))*cos(theta_e)'
+        return sympify(str_Y_l1m0, evaluate=False)
 
     def RDF_eff_SW(self, evaluate=False):
         str_RDF_eff_SW = []
@@ -128,19 +135,20 @@ class BubbleCollision_RF_sym():
     def RQF_eff_ISW(self, evaluate=False):
         str_RQF_eff_ISW_integrand = []
         for i in range(3):
-            str_RQF_eff_ISW_integrand.append(f'(2* D_psi - 3/2)*5*sqrt(6)/16*sin(theta_e)**2*\
-            (A/r_H*(3/4*Delta_chi*({self.Delta_cos_theta_c_n(4)[i]})\
-            + (chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(3)[i]}) \
-            -1/2*Delta_chi*({self.Delta_cos_theta_c_n(2)[i]}) - \
-            (chi_e*cos(theta_e) - chi_c)* ({self.Delta_cos_theta_c_n(1)[i]})) + \
-            B/(r_H**2)*(3/5*Delta_chi**2*({self.Delta_cos_theta_c_n(5)[i]}) + \
-            3/2*Delta_chi*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(4)[i]}) + \
+            str_RQF_eff_ISW_integrand.append(f'5*sqrt(6)/16*sin(theta_e)**2*\
+            (A/r_H*(3/4*Delta_chi*({self.Delta_cos_theta_c_n(4, Delta_chi_at_a=True)[i]})\
+            + (chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(3, Delta_chi_at_a=True)[i]}) \
+            -1/2*Delta_chi*({self.Delta_cos_theta_c_n(2, Delta_chi_at_a=True)[i]}) - \
+            (chi_e*cos(theta_e) - chi_c)* ({self.Delta_cos_theta_c_n(1, Delta_chi_at_a=True)[i]})) + \
+            B/(r_H**2)*(3/5*Delta_chi**2*({self.Delta_cos_theta_c_n(5, Delta_chi_at_a=True)[i]}) + \
+            3/2*Delta_chi*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(4, Delta_chi_at_a=True)[i]}) + \
             1/3*(-Delta_chi**2 + \
-            3*(chi_e*cos(theta_e)-chi_c)**2)*({self.Delta_cos_theta_c_n(3)[i]}) - \
-            Delta_chi*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(2)[i]}) - \
-            (chi_e*cos(theta_e)-chi_c)**2*({self.Delta_cos_theta_c_n(1)[i]})))')
+            3*(chi_e*cos(theta_e)-chi_c)**2)*({self.Delta_cos_theta_c_n(3, Delta_chi_at_a=True)[i]}) - \
+            Delta_chi*(chi_e*cos(theta_e)-chi_c)*({self.Delta_cos_theta_c_n(2, Delta_chi_at_a=True)[i]}) - \
+            (chi_e*cos(theta_e)-chi_c)**2*({self.Delta_cos_theta_c_n(1, Delta_chi_at_a=True)[i]})))')
 
-        return Array(Integral(Derivative(Symbol('D_psi'), Symbol('a'))*Array(sympify(str_RQF_eff_ISW_integrand, evaluate=evaluate)), Symbol('a')))
+        # return Array(Integral(Derivative(Symbol('D_psi'), Symbol('a'))*Array(sympify(str_RQF_eff_ISW_integrand, evaluate=evaluate)), Symbol('a')))
+        return Array([Integral(Derivative(Symbol('D_psi'), Symbol('a'))*Array(sympify(str_RQF_eff_ISW_integrand, evaluate=evaluate)[0]), Symbol('a')), Integral(Derivative(Symbol('D_psi'), Symbol('a'))*Array(sympify(str_RQF_eff_ISW_integrand, evaluate=evaluate)[1]), Symbol('a')), Integral(Derivative(Symbol('D_psi'), Symbol('a'))*Array(sympify(str_RQF_eff_ISW_integrand, evaluate=evaluate)[2]), Symbol('a')) ])
 
     def RQF_eff_decDopp(self, evaluate=False):
         str_RQF_eff_decDopp = []
@@ -158,7 +166,6 @@ class BubbleCollision_RF_sym():
     def v_l1m0_at_bound_sym(self, name, evaluate=False):
         theta_e = Symbol('theta_e')
 
-
         if name == 'SW':
             RDF = self.RDF_eff_SW(evaluate=False)
             region_num = 3
@@ -171,22 +178,33 @@ class BubbleCollision_RF_sym():
             RDF = self.RDF_eff_localDopp(evaluate=False)
             region_num = 2
 
-        v_l1m0 = []
-        for i in range(region_num):
-            v_l1m0.append(integrate(2*pi*sin(theta_e)*self.Y_l1m0()*RDF[i], theta_e))
-        return Array(v_l1m0)
+        elif name == 'ISW':
+            print("no symbolic form RDF-ISW multipoles")
+
+        if name != 'ISW':
+            v_l1m0_at_bound = []
+            for i in range(region_num):
+                v_l1m0_at_bound.append(integrate(2*pi*sin(theta_e)*self.Y_l1m0()*\
+                                                 RDF[i], theta_e))
+            return Array(v_l1m0_at_bound)
 
     def q_l2m0_at_bound_sym(self, name, evaluate=False):
         theta_e = Symbol('theta_e')
+
         if name == 'SW':
             RQF = self.RQF_eff_SW(evaluate=False)
         elif name == 'decDopp':
             RQF = self.RQF_eff_decDopp(evaluate=False)
+        elif name == 'ISW':
+            print("no symbolic form RQF-ISW multipoles")
 
-        q_l2m0 = []
-        for i in range(3):
-            q_l2m0.append(integrate(2*pi*sin(theta_e)*self.Y_s2l2m0()*RQF[i], theta_e))
-        return Array(q_l2m0)
+        if name != 'ISW':
+            q_l2m0_at_bound = []
+            for i in range(3):
+                q_l2m0_at_bound.append(integrate(2*pi*sin(theta_e)*\
+                                                 self.Y_s2l2m0()*RQF[i], theta_e))
+            return Array(q_l2m0_at_bound)
+
 
     def v_l1m0(self, name):
         A = Symbol('A')
@@ -216,15 +234,22 @@ class BubbleCollision_RF_sym():
             region = self.local_region
             region_exist = self.local_region_exist
 
-        v_l1m0 = 0
-        for i in range(len(region)):
-            if region_exist[i]:
-                upper = np.deg2rad(region[i][-1])
-                lower = np.deg2rad(region[i][0])
-                v_l1m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.v_l1m0_at_bound_sym(name)[i])
-                v_l1m0 += v_l1m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - v_l1m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
-            else:
-                continue
+        if name != 'ISW':
+            v_l1m0 = 0
+            for i in range(len(region)):
+                if region_exist[i]:
+                    upper = np.deg2rad(region[i][-1])
+                    lower = np.deg2rad(region[i][0])
+                    v_l1m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.v_l1m0_at_bound_sym(name)[i])
+                    v_l1m0 += v_l1m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - v_l1m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
+                else:
+                    continue
+        elif name == 'ISW':
+            theta_e_deg_1d = np.linspace(0,180,200)
+            theta_e_1d = np.deg2rad(theta_e_deg_1d)
+
+            integrand = 2*np.pi*np.sin(theta_e_1d)*(1/2)*np.sqrt(3/(np.pi))*np.cos(theta_e_1d)*BC.BubbleCollision_RF(self.A, self.B, self.Z_c, self.Z_e, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h).RDF_eff_ISW(theta_e_1d)
+            v_l1m0 = scipy.integrate.simps(integrand, theta_e_1d)
 
         return v_l1m0
 
@@ -250,15 +275,22 @@ class BubbleCollision_RF_sym():
         region = self.remote_region
         region_exist = self.remote_region_exist
 
-        q_l2m0 = 0
-        for i in range(len(region)):
-            if region_exist[i]:
-                upper = np.deg2rad(region[i][-1])
-                lower = np.deg2rad(region[i][0])
-                q_l2m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.q_l2m0_at_bound_sym(name)[i])
-                q_l2m0 += q_l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - q_l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
-            else:
-                continue
+        if name != 'ISW':
+            q_l2m0 = 0
+            for i in range(len(region)):
+                if region_exist[i]:
+                    upper = np.deg2rad(region[i][-1])
+                    lower = np.deg2rad(region[i][0])
+                    q_l2m0_lambda = lambdify((A, B, r_H, D_dec, chi_c, chi_e, Delta_chi_dec, theta_e), self.q_l2m0_at_bound_sym(name)[i])
+                    q_l2m0 += q_l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, upper) - q_l2m0_lambda(self.A, self.B, self.r_H, D_dec_num, self.chi_c, self.chi_e, self.Delta_chi_dec, lower)
+                else:
+                    continue
+        elif name == 'ISW':
+            theta_e_deg_1d = np.linspace(0,180,200)
+            theta_e_1d = np.deg2rad(theta_e_deg_1d)
+
+            integrand = 2*np.pi*np.sin(theta_e_1d)*(3/4)*np.sqrt(5/(6*np.pi))*np.sin(theta_e_1d)**2*BC.BubbleCollision_RF(self.A, self.B, self.Z_c, self.Z_e, self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h).RQF_eff_ISW(theta_e_1d)
+            q_l2m0 = scipy.integrate.simps(integrand, theta_e_1d)
 
         return q_l2m0
 

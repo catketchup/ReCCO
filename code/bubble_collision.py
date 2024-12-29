@@ -47,7 +47,7 @@ class BubbleCollision_RF():
     def Delta_cos_theta_c_n(self, cos_theta_c, n):
         return 1 - cos_theta_c**n
 
-    def Approx_RDF_SW_radial(self, theta_e):
+    def RDF_eff_SW(self, theta_e):
         # need to select the range of Z_e and theta_e
         A = self.A
         B = self.B
@@ -57,7 +57,7 @@ class BubbleCollision_RF():
         return (2*self.Dpsi_dec-3/2)*3/2*cos_theta_e*(A/self.r_H*((self.chi_e*cos_theta_e-self.chi_c)*1/2*self.Delta_cos_theta_c_n(cos_theta_c, 2)+1/3*self.chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 3)) + B/(self.r_H**2)*((self.chi_e*cos_theta_e-self.chi_c)**2*1/2*self.Delta_cos_theta_c_n(cos_theta_c, 2) + (self.chi_e*cos_theta_e-self.chi_c)*self.chi_edec*2/3*self.Delta_cos_theta_c_n(cos_theta_c, 3) + 1/4*self.chi_edec**2*self.Delta_cos_theta_c_n(cos_theta_c, 4)))
 
 
-    def Approx_RDF_localDopp_radial(self, theta_e):
+    def RDF_eff_localDopp(self, theta_e):
         A = self.A
         B = self.B
         cos_theta_e = np.cos(theta_e)
@@ -67,7 +67,7 @@ class BubbleCollision_RF():
         return -self.Dv_e/(self.r_H)*(A + 2*B/(self.r_H)*(self.chi_e*cos_theta_e - self.chi_c))*cos_theta_e*step_array
 
 
-    def Approx_RDF_decDopp_radial(self, theta_e):
+    def RDF_eff_decDopp(self, theta_e):
         A = self.A
         B = self.B
         cos_theta_c = self.Cos_theta_c(theta_e)
@@ -75,7 +75,7 @@ class BubbleCollision_RF():
 
         return 3/2*cos_theta_e*self.Dv_dec*(1/3*A/self.r_H* self.Delta_cos_theta_c_n(cos_theta_c, 3) +  2/3*B/(self.r_H**2)*(self.chi_e*cos_theta_e-self.chi_c)* self.Delta_cos_theta_c_n(cos_theta_c, 3) + 1/2*B/(self.r_H**2)*self.chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 4))
 
-    def Approx_RDF_SW_radial_a(self, a, theta_e):
+    def RDF_eff_SW_a(self, a, theta_e):
         A = self.A
         B = self.B
 
@@ -91,23 +91,23 @@ class BubbleCollision_RF():
         return 3/2*cos_theta_e*(A/self.r_H*((self.chi_e*cos_theta_e-self.chi_c)*1/2*self.Delta_cos_theta_c_n(cos_theta_c, 2)+1/3*chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 3)) + B/(self.r_H**2)*((self.chi_e*cos_theta_e-self.chi_c)**2*1/2*self.Delta_cos_theta_c_n(cos_theta_c, 2) + (self.chi_e*cos_theta_e-self.chi_c)*chi_edec*2/3*self.Delta_cos_theta_c_n(cos_theta_c, 3) + 1/4*chi_edec**2*self.Delta_cos_theta_c_n(cos_theta_c, 4)))
 
 
-    def Approx_RDF_ISW_radial(self, theta_e):
+    def RDF_eff_ISW(self, theta_e):
         # a = np.logspace(np.log10(config.adec), np.log10(rs.az(self.Z_e)), kszpsz_config.transfer_integrand_sampling)
         a = np.linspace(config.adec, rs.az(self.Z_e), 500)
 
-        RDF_ISW_radial = []
+        RDF_eff_ISW = []
         for theta_e_i in theta_e:
-            integrand = rs.derv_Dpsi_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)*self.Approx_RDF_SW_radial_a(a, theta_e_i)
+            integrand = rs.derv_Dpsi_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)*self.RDF_eff_SW_a(a, theta_e_i)
 
-            RDF_ISW_radial.append(2*integrate.simps(integrand, a))
+            RDF_eff_ISW.append(2*integrate.simps(integrand, a))
 
-        return np.array(RDF_ISW_radial)
+        return np.array(RDF_eff_ISW)
 
-    def Approx_RDF_radial(self, theta_e):
-        return self.Approx_RDF_SW_radial(theta_e) + self.Approx_RDF_ISW_radial(theta_e) + self.Approx_RDF_decDopp_radial(theta_e) + self.Approx_RDF_localDopp_radial(theta_e)
+    def RDF_eff(self, theta_e):
+        return self.RDF_eff_SW(theta_e) + self.RDF_eff_ISW(theta_e) + self.RDF_eff_decDopp(theta_e) + self.RDF_eff_localDopp(theta_e)
 
 
-    def Approx_RQF_SW(self, theta_e):
+    def RQF_eff_SW(self, theta_e):
         A = self.A
         B = self.B
         cos_theta_c = self.Cos_theta_c(theta_e)
@@ -117,7 +117,7 @@ class BubbleCollision_RF():
         return (2*self.Dpsi_dec-3/2)*5*np.sqrt(6)/16*sin_theta_e**2*(A/self.r_H*(3/4*self.chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 4) + (self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 3) -1/2*self.chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 2) - (self.chi_e*cos_theta_e -self.chi_c)* self.Delta_cos_theta_c_n(cos_theta_c, 1)) + B/(self.r_H**2)*(3/5*self.chi_edec**2*self.Delta_cos_theta_c_n(cos_theta_c, 5) + 3/2*self.chi_edec*(self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 4) + 1/3*(-self.chi_edec**2 + 3*(self.chi_e*cos_theta_e-self.chi_c)**2)*self.Delta_cos_theta_c_n(cos_theta_c,3) - self.chi_edec*(self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 2) - (self.chi_e*cos_theta_e-self.chi_c)**2*self.Delta_cos_theta_c_n(cos_theta_c, 1)))
 
 
-    def Approx_RQF_decDopp(self, theta_e):
+    def RQF_eff_decDopp(self, theta_e):
         A = self.A
         B = self.B
         cos_theta_c = self.Cos_theta_c(theta_e)
@@ -128,7 +128,7 @@ class BubbleCollision_RF():
         return self.Dv_dec* 5*np.sqrt(6)/16*sin_theta_e**2*(A/self.r_H*(3/4*self.Delta_cos_theta_c_n(cos_theta_c, 4) - 1/2*self.Delta_cos_theta_c_n(cos_theta_c, 2)) + 2*B/(self.r_H**2)*((3/5*self.chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 5)) + 3/4*(self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 4) -1/3*self.chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 3) - 1/2*(self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 2)))
 
 
-    def Approx_RQF_SW_a(self, a, theta_e):
+    def RQF_eff_SW_a(self, a, theta_e):
         A = self.A
         B = self.B
 
@@ -145,16 +145,16 @@ class BubbleCollision_RF():
         return 5*np.sqrt(6)/16*sin_theta_e**2*(A/self.r_H*(3/4*chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 4) + (self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 3) -1/2*chi_edec*self.Delta_cos_theta_c_n(cos_theta_c, 2) - (self.chi_e*cos_theta_e -self.chi_c)* self.Delta_cos_theta_c_n(cos_theta_c, 1)) + B/(self.r_H**2)*(3/5*chi_edec**2*self.Delta_cos_theta_c_n(cos_theta_c, 5) + 3/2*chi_edec*(self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 4) + 1/3*(-chi_edec**2 + 3*(self.chi_e*cos_theta_e-self.chi_c)**2)*self.Delta_cos_theta_c_n(cos_theta_c,3) - chi_edec*(self.chi_e*cos_theta_e-self.chi_c)*self.Delta_cos_theta_c_n(cos_theta_c, 2) - (self.chi_e*cos_theta_e-self.chi_c)**2*self.Delta_cos_theta_c_n(cos_theta_c,1)))
 
 
-    def Approx_RQF_ISW(self, theta_e):
+    def RQF_eff_ISW(self, theta_e):
         a = np.logspace(np.log10(config.adec), np.log10(rs.az(self.Z_e)), kszpsz_config.transfer_integrand_sampling)
 
-        RQF_ISW = []
+        RQF_eff_ISW = []
         for theta_e_i in theta_e:
-            integrand = rs.derv_Dpsi_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)*self.Approx_RQF_SW_a(a, theta_e_i)
+            integrand = rs.derv_Dpsi_inter(self.Omega_b, self.Omega_c, self.w, self.wa, self.Omega_K, self.h)(a)*self.RQF_eff_SW_a(a, theta_e_i)
 
-            RQF_ISW.append(2*integrate.simps(integrand, a))
+            RQF_eff_ISW.append(2*integrate.simps(integrand, a))
 
-        return np.array(RQF_ISW)
+        return np.array(RQF_eff_ISW)
 
-    def Approx_RQF(self, theta_e):
-        return self.Approx_RQF_SW(theta_e) + self.Approx_RQF_decDopp(theta_e) + self.Approx_RQF_ISW(theta_e)
+    def RQF_eff(self, theta_e):
+        return self.RQF_eff_SW(theta_e) + self.RQF_eff_decDopp(theta_e) + self.RQF_eff_ISW(theta_e)
