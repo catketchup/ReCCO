@@ -108,7 +108,7 @@ class BubbleCollision_RF_sym():
 
     def RDF_eff_localDopp(self, evaluate=False):
         str_RDF_eff_localDopp = []
-        str_RDF_eff_localDopp.append(f'D_v_e/(r_H)*cos(theta_e)*(A + 2*B/(r_H)*(chi_e*cos(theta_e) - chi_c))')
+        str_RDF_eff_localDopp.append(f'-D_v_e/(r_H)*cos(theta_e)*(A + 2*B/(r_H)*(chi_e*cos(theta_e) - chi_c))')
         str_RDF_eff_localDopp.append(0)
 
         return Array(sympify(str_RDF_eff_localDopp, evaluate=evaluate))
@@ -299,3 +299,5 @@ class BubbleCollision_RF_sym():
 
     def clqq_l2(self, name):
         return self.q_l2m0(name)**2
+
+
