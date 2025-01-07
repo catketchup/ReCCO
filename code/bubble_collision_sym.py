@@ -97,6 +97,8 @@ class BubbleCollision_RF_sym():
 
         return Array(sympify(str_RDF_eff_SW, evaluate=evaluate))
 
+
+
     def RDF_eff_decDopp(self, evaluate=False):
         str_RDF_eff_decDopp = []
         for i in range(3):
@@ -299,5 +301,3 @@ class BubbleCollision_RF_sym():
 
     def clqq_l2(self, name):
         return self.q_l2m0(name)**2
-
-

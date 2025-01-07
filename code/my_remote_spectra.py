@@ -29,7 +29,8 @@ def aeq(Omega_b, Omega_c, h, Omega_r_h2=conf.Omega_r_h2):
 
 
 def k_sampling(config=conf):
-    return np.logspace(config.k_min, config.k_max, config.k_res)
+    # return np.logspace(config.k_min, config.k_max, config.k_res)
+    return np.logspace(config.log_kmin, config.log_kmax, config.k_res)
 
 def L_sampling(config=conf):
     return np.arange(config.ksz_estim_signal_lmax)
@@ -956,3 +957,447 @@ def CL(T1, T2, k=None, L=None, P_psi=None, config=conf):
         CL[l] = np.real(integrate.simps(I, k))
 
     return CL
+
+# Bin Correlation matrix
+
+def CL_cov(T_list, k, L, As, ns):
+
+    CL= np.zeros((len(T_list),len(T_list),len(L)))
+
+    for i in np.arange(len(T_list)):
+
+        for j in np.arange(i,len(T_list)):
+
+            for l in L:
+
+                T1= T_list[i]
+
+                T2= T_list[j]
+
+                I= ((k**2)/((2*np.pi)**3))*Ppsi(k, As, ns)*np.conj(T1[:,l])*T2[:,l]
+
+                CL[i,j,l] = np.real(integrate.simps(I, k))
+
+                CL[j,i,l] = CL[i,j,l]
+
+    return CL
+
+######################################################################################################
+################                                         ###################
+################ CORRELATION MATRIX FOR FISHER FORECAST  ###################
+################                                         ###################
+######################################################################################################
+
+
+# Correlation matrix built for fisher forecast
+
+def CL_fisher(N, n, Omega_b, Omega_c, w, wa, Omega_K, h, As, ns, tau):
+
+    CL_fisher = []
+
+    k = k_sampling()
+
+    Lv = np.arange(conf.ksz_estim_signal_lmax)
+
+    Lq = np.arange(conf.psz_estim_signal_lmax)
+
+    LT = np.arange(conf.T_estim_signal_lmax)
+
+    LE = np.arange(conf.E_estim_signal_lmax)
+
+    l_min = np.min([conf.ksz_estim_signal_lmin,conf.psz_estim_signal_lmin, conf.T_estim_signal_lmin, conf.E_estim_signal_lmin])
+    l_max = np.max([conf.ksz_estim_signal_lmax,conf.psz_estim_signal_lmax, conf.T_estim_signal_lmax, conf.E_estim_signal_lmax])
+
+    L = np.arange(l_max)
+
+
+    T_list = []
+
+    for l in L:
+
+        T_list.append([])
+
+    #print("Getting dipole transfer functions ... ")
+
+    for i in np.arange(N):
+
+        Tksz = Transfer_ksz_bin(N, n, i, k, Lv, Omega_b, Omega_c, w, wa, Omega_K, h)
+
+        for u1 in Lv:
+
+            if u1 >= conf.ksz_estim_signal_lmin:
+
+                (T_list[u1]).append(Tksz[:,u1])
+
+    #print("Getting quadrupole transfer functions ... ")
+
+    for i in np.arange(N):
+
+        Tpsz = Transfer_psz_bin(N, i, k, Lq, Omega_b, Omega_c, w, wa, Omega_K, h)
+
+        for u2 in Lq:
+
+            if u2 >= conf.psz_estim_signal_lmin:
+
+                (T_list[u2]).append(Tpsz[:,u2])
+
+    #print("Getting CMB transfer functions ... ")
+
+    TCMB = Transfer_CMB(k, LT , Omega_b, Omega_c, w, wa, Omega_K, h)
+
+    for u3 in LT:
+
+        if u3 >= conf.T_estim_signal_lmin:
+
+            (T_list[u3]).append(TCMB[:,u3])
+
+    #print("Getting E polarization transfer functions ... ")
+
+    TE = Transfer_E(k, LE , Omega_b, Omega_c, w, wa, Omega_K, h, tau)
+
+    for u4 in LE:
+
+        if u4 >= conf.E_estim_signal_lmin:
+
+            (T_list[u4]).append(TE[:,u4])
+
+
+
+    for l in L:
+
+        if l >= l_min:
+
+            Transfers = T_list[l]
+
+            CL= np.zeros((len(Transfers),len(Transfers)))
+
+            for i in np.arange(len(Transfers)):
+
+                for j in np.arange(i,len(Transfers)):
+
+                    T1= Transfers[i]
+
+                    T2= Transfers[j]
+
+                    I= ((k**2)/((2*np.pi)**3))*Ppsi(k, As, ns)*np.conj(T1)*T2
+
+                    CL[i,j] = np.real(integrate.simps(I, k))
+
+                    CL[j,i] = CL[i,j]
+
+            CL_fisher.append(CL)
+
+        else:
+
+            CL_fisher.append([])
+
+
+    return CL_fisher
+
+# Derivatives of the correlation matrix
+
+
+def CL_fisher_Di(i, N, n, Omega_b, Omega_c, w, wa, Omega_K, h, As, ns, tau):
+
+    step = np.array([Omega_b/100.0, Omega_c/100.0 , w/100.0, 1e-3 ,1e-3, h/100.0, As/100.0, ns/100.0, tau/10.0])
+
+    step_Ob     = np.array(  [step[0],    0     ,   0     ,     0     ,    0     ,    0    ,   0     ,   0    ,    0   ])
+    step_Oc     = np.array(  [    0  ,  step[1] ,   0     ,     0     ,    0     ,    0    ,   0     ,   0    ,    0   ])
+    step_w      = np.array(  [    0  ,    0     , step[2] ,     0     ,    0     ,    0    ,   0     ,   0    ,    0   ])
+    step_wa     = np.array(  [    0  ,    0     ,   0     ,  step[3]  ,    0     ,    0    ,   0     ,   0    ,    0   ])
+    step_OK     = np.array(  [    0  ,    0     ,   0     ,     0     , step[4]  ,    0    ,   0     ,   0    ,    0   ])
+    step_h      = np.array(  [    0  ,    0     ,   0     ,     0     ,    0     , step[5] ,   0     ,   0    ,    0   ])
+    step_As     = np.array(  [    0  ,    0     ,   0     ,     0     ,    0     ,    0    , step[6] ,   0    ,    0   ])
+    step_ns     = np.array(  [    0  ,    0     ,   0     ,     0     ,    0     ,    0    ,   0     , step[7],    0   ])
+    step_tau    = np.array(  [    0  ,    0     ,   0     ,     0     ,    0     ,    0    ,   0     ,   0    , step[8]])
+
+    CL_fisher1 = CL_fisher(N, n, Omega_b + step_Ob[i], Omega_c + step_Oc[i], w +step_w[i], wa+step_wa[i], Omega_K + step_OK[i], h+step_h[i], As+step_As[i], ns+step_ns[i], tau + step_tau[i])
+    CL_fisher2 = CL_fisher(N, n, Omega_b - step_Ob[i], Omega_c - step_Oc[i], w -step_w[i], wa-step_wa[i], Omega_K - step_OK[i], h-step_h[i], As-step_As[i], ns-step_ns[i], tau - step_tau[i])
+
+    nl = len(CL_fisher1)
+
+    CL_fisher_Di = []
+
+    for u in np.arange(nl):
+
+        C_plus  = np.asarray(CL_fisher1[u])
+        C_minus = np.asarray(CL_fisher2[u])
+
+        CL_fisher_Di.append((C_plus-C_minus)/(2.0*step[i]))
+
+    return CL_fisher_Di
+
+
+
+
+
+###############################################################################################
+################                      WRAPPER FUNCTIONS                     ###################
+###############################################################################################
+
+
+#
+# These are functions the user can call when using fiducial parameters
+#
+
+def zbins_z_func():
+    # "Get boundaries of bins in comoving distance"
+    Chis_bound = np.linspace(
+        Chia_inter(conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)(az(conf.z_min)),
+        Chia_inter(conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)(az(conf.z_max)),
+        conf.N_bins+1)
+
+    # "Translate this to redshift boundaries"
+    a_guess = np.linspace(az(conf.z_min),az(conf.z_max),conf.N_bins+1)
+    sol = optimize.root(root_chi2a, a_guess, args=(Chis_bound, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+    Z = (1/sol.x)-1
+
+    return Z
+
+
+def zbins_zcentral_func():
+    return Z_bin(conf.N_bins)
+
+
+def zbins_chi_func():
+    """Get boundaries of bins in comoving distance"""
+    Chis_bound = np.linspace(
+        Chia_inter(conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)(az(conf.z_min)),
+        Chia_inter(conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)(az(conf.z_max)),
+        conf.N_bins+1)
+
+    return Chis_bound
+
+
+def zbins_chicentral_func():
+    """Get boundaries of bins in comoving distance"""
+    Chis_bound = np.linspace(
+        Chia_inter(conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)(az(conf.z_min)),
+        Chia_inter(conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)(az(conf.z_max)),
+        conf.N_bins+1)
+
+    # "Get positions of bins in comoving distance"
+    Chis = np.zeros(conf.N_bins)
+    for i in np.arange(0,conf.N_bins):
+        Chis[i] = (Chis_bound[i]+Chis_bound[i+1])/2
+
+    return Chis
+
+
+def get_CLvv():
+    """
+    Returns the diagonal part of the vv covariance
+    matrix as a (N_bin,N_bin,L) array
+    """
+    print ("Calculating Cl_vv...")
+    k = k_sampling()
+    Lv = np.arange(conf.ksz_estim_signal_lmax)
+    T_list = []
+
+    for i in np.arange(conf.N_bins):
+        T_list.append(Transfer_ksz_bin(conf.N_bins, conf.n_samples, i, k, Lv,
+            conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+        print("Done bin "+str(i))
+
+    CLvv = CL_bins(T_list, T_list, k, Lv, conf.As, conf.ns)
+    return CLvv
+
+
+def get_CLvv_localdopp():
+    """
+    Returns the diagonal part of the vv covariance matrix as a
+    (N_bin,N_bin,L) array using only the local doppler contribution
+    """
+    print ("Calculating Cl_vv...")
+    k = k_sampling()
+    Lv = np.arange(conf.ksz_estim_signal_lmax)
+    T_list = []
+
+    for i in np.arange(conf.N_bins):
+        T_list.append(Transfer_ksz_bin_localDopp(conf.N_bins, conf.n_samples, i, k, Lv,
+            conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+        print("Done bin "+str(i))
+
+    CLvv = CL_bins(T_list, T_list, k, Lv, conf.As, conf.ns)
+    return CLvv
+
+
+def get_CLqq():
+    """
+    Returns the diagonal part of the qq covariance matrix as a (N_bin,N_bin,L) array
+    """
+    print ("Calculating Cl_qq...")
+    k = k_sampling()
+    Lq = np.arange(conf.psz_estim_signal_lmax)
+    T_list = []
+
+    for i in np.arange(conf.N_bins):
+        T_list.append(Transfer_psz_bin(conf.N_bins, i, k, Lq, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+        print("Done bin "+str(i))
+
+    CLqq = CL_bins(T_list, T_list, k, Lq, conf.As, conf.ns)
+    return CLqq
+
+
+def get_CLvq():
+    print ("Calculating Cl_vq...")
+    k = k_sampling()
+    l_max = np.min([conf.ksz_estim_signal_lmax,conf.psz_estim_signal_lmax])
+    Lvq = np.arange(l_max)
+    T_list1 = []
+    T_list2 = []
+
+    for i in np.arange(conf.N_bins):
+        T_list1.append(Transfer_psz_bin(conf.N_bins, i, k, Lvq, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+        print("Done bin "+str(i))
+
+    for i in np.arange(conf.N_bins):
+        T_list2.append(Transfer_ksz_bin(conf.N_bins, conf.n_samples, i, k, Lvq, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+        print("Done bin "+str(i))
+
+    CL_vq = CL_bins(T_list2, T_list1, k, Lvq, conf.As, conf.ns)
+    return CL_vq
+
+
+def get_CLTT():
+    print ("Calculating Cl_TT...")
+    k = k_sampling()
+    LT = np.arange(conf.T_estim_signal_lmax)
+    T_list = [Transfer_CMB(k, LT , conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)]
+
+    CL_TT = CL_bins(T_list, T_list, k, LT, conf.As, conf.ns)
+    return CL_TT
+
+
+def get_CLEE():
+    print ("Calculating Cl_EE...")
+    k = k_sampling()
+    LE = np.arange(conf.E_estim_signal_lmax)
+    T_list = [Transfer_E(k, LE , conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.tau)]
+
+    CL_EE = CL_bins(T_list, T_list, k, LE, conf.As, conf.ns)
+    return CL_EE
+
+
+def get_CLTv():
+    print ("Calculating Cl_Tv...")
+    k = k_sampling()
+    l_max = np.min([conf.ksz_estim_signal_lmax,conf.T_estim_signal_lmax])
+    LTv = np.arange(l_max)
+
+    T_list1 = []
+    T_list2 = []
+
+    TCMB = Transfer_CMB(k, LTv , conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)
+
+    for i in np.arange(conf.N_bins):
+        T_list1.append(TCMB)
+        print("Done bin "+str(i))
+
+
+    for i in np.arange(conf.N_bins):
+        T_list2.append(Transfer_ksz_bin(conf.N_bins, conf.n_samples, i, k, LTv, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+        print("Done bin "+str(i))
+
+    CL_Tv = CL_bins(T_list2, T_list1, k, LTv, conf.As, conf.ns)
+    return CL_Tv
+
+
+def get_CLvv_cov():
+
+    k = k_sampling()
+
+    Lv = np.arange(conf.ksz_estim_signal_lmax)
+
+    T_list = []
+
+    for i in np.arange(conf.N_bins):
+
+        T_list.append(Transfer_ksz_bin(conf.N_bins, conf.n_samples, i, k, Lv, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+
+        print("Done bin "+str(i))
+
+    CLvv_cov = CL_cov(T_list, k, Lv, conf.As, conf.ns)
+
+    return CLvv_cov
+
+def get_CLqq_cov():
+
+    k = k_sampling()
+
+    Lq = np.arange(conf.psz_estim_signal_lmax)
+
+    T_list = []
+
+    for i in np.arange(conf.N_bins):
+
+        T_list.append(Transfer_psz_bin(conf.N_bins, i, k, Lq, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h))
+
+        print("Done bin "+str(i))
+
+    CLqq_cov = CL_cov(T_list, k, Lq, conf.As, conf.ns)
+
+    return CLqq_cov
+
+
+
+def get_CL_fisher(N, n):
+
+    return CL_fisher(N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+def get_CL_fisher_Ob(N, n):
+
+    return CL_fisher_Di(0, N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+def get_CL_fisher_Oc(N, n):
+
+    return CL_fisher_Di(1, N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+def get_CL_fisher_w(N, n):
+
+    return CL_fisher_Di(2, N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+def get_CL_fisher_wa(N, n):
+
+    return CL_fisher_Di(3, N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+def get_CL_fisher_OK(N, n):
+
+    return CL_fisher_Di(4, N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+def get_CL_fisher_h(N, n):
+
+    return CL_fisher_Di(5, N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+def get_CL_fisher_As(N, n):
+
+    CL = CL_fisher(N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+    l_min = np.min([conf.ksz_estim_signal_lmin,conf.psz_estim_signal_lmin, conf.T_estim_signal_lmin, conf.E_estim_signal_lmin])
+
+    L = np.arange(len(CL))
+
+    for l in L:
+
+        if l >= l_min:
+
+            CL[l] = CL[l]/conf.As
+
+    return CL
+
+def get_CL_fisher_ns(N, n):
+
+    return CL_fisher_Di(7, N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+def get_CL_fisher_tau(N, n):
+
+    return CL_fisher_Di(8, N, n, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h, conf.As, conf.ns, conf.tau)
+
+
+
+#Globals for use in other modules:
+zbins_nr = conf.N_bins
+zbins_z = zbins_z_func()
+zbins_zcentral = zbins_zcentral_func()
+zbins_chi = zbins_chi_func()
+zbins_chicentral = zbins_chicentral_func()

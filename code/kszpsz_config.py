@@ -3,10 +3,14 @@ import numpy as np
 
 ################ red shift binning
 
-# z_max = 5.0 #highest redshift.
-# z_min = 0.2 #lowest redshift.
+z_max = 5.0 #highest redshift.
+z_min = 0.2 #lowest redshift.
 
-# N_bins = 32 #number of red shift bins, uniform in conformal distance.
+E_estim_signal_lmax = 100
+T_estim_signal_lmax = 1000
+
+ksz_estim_signal_lmax = 100
+N_bins = 4 #number of red shift bins, uniform in conformal distance.
 
 transfer_integrand_sampling = 1000
 
@@ -73,23 +77,37 @@ noiseTuKArcmin_T = 1.0 # 1.5 S4
 beamArcmin_pol = 1.0
 noiseTuKArcmin_pol = 1.0 #1.5
 
-
 ################ k sampling for direct transfer integration
+
+# k_min = -5  #logscale
+# k_max = 1.4  #logscale
+# kaux = np.append(np.logspace(k_min, -3, 200),np.logspace(-2.99, k_max, 10000))
+
+
+# ################ k sampling for direct transfer integration
 # k_min = 0.0001
 # k_max = 0.001
 # kaux = np.linspace(k_min, k_max, 200)
 
-k_min = -5  #logscale
-k_max = -1.9  #logscale
-k_res = 200
+# k_min = -5  #logscale
+# k_max = -1.9  #logscale
+# k_res = 200
 
-# pivot scale
+# # pivot scale
+# k0 = 0.05
+
+# if k_max<=-3:
+#     kaux = np.logspace(k_min, k_max, k_res)
+# else:
+#     kaux = np.append(np.logspace(k_min, -3, 200),np.logspace(-2.99, k_max, 10000))
+
+log_kmax = 2
+log_kmin = -5
+k_res = 1000
+ks_hm = np.logspace(log_kmin,log_kmax,num=k_res)     #k-sampling
+zs_hm = np.logspace(-2,np.log10(6),150) #z-sampling
+
 k0 = 0.05
-
-if k_max<=-3:
-    kaux = np.logspace(k_min, k_max, k_res)
-else:
-    kaux = np.append(np.logspace(k_min, -3, 200),np.logspace(-2.99, k_max, 10000))
 
 
 ###CIB info
