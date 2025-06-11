@@ -1395,6 +1395,33 @@ def get_CL_fisher_tau(N, n):
 
 
 
+def get_PkDeltaDelta(ze):
+    k = k_sampling()
+    a = az(ze)
+    Dpsi = Dpsi_inter(conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)(a)
+    Trans = T(k, conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h)
+
+    return {
+        'k': k,
+        'Pk': Dpsi**2 * Trans**2 * (2.0*k**2*a/(3.0*(conf.Omega_b+conf.Omega_c)*H0(conf.h)**2))**2 \
+                * Ppsi(k, conf.As, conf.ns)
+    }
+
+
+def get_CLDeltaDelta(ze):
+    """Delta_l(k) Transfer function for synchronous gauge density perutrbations"""
+    print("Calculating Cl_DeltaDelta...")
+    k = k_sampling()
+    Lv = np.arange(conf.ksz_estim_signal_lmax)
+    T_list = [ Transfer_NGR_delta_redshift(k, Lv, ze,
+            conf.Omega_b, conf.Omega_c, conf.w, conf.wa, conf.Omega_K, conf.h) ]
+
+    return {
+        'Cl': CL_bins(T_list, T_list, k, Lv),
+        'l': Lv
+    }
+
+
 #Globals for use in other modules:
 zbins_nr = conf.N_bins
 zbins_z = zbins_z_func()

@@ -3,11 +3,13 @@ import numpy as np
 
 ################ red shift binning
 
-z_max = 5.0 #highest redshift.
-z_min = 0.2 #lowest redshift.
+z_max = 0.7 #highest redshift.
+z_min = 0.4 #lowest redshift.
 
 E_estim_signal_lmax = 100
 T_estim_signal_lmax = 1000
+
+psz_estim_signal_lmax = 100
 
 ksz_estim_signal_lmax = 100
 N_bins = 4 #number of red shift bins, uniform in conformal distance.
@@ -89,17 +91,17 @@ noiseTuKArcmin_pol = 1.0 #1.5
 # k_max = 0.001
 # kaux = np.linspace(k_min, k_max, 200)
 
-# k_min = -5  #logscale
-# k_max = -1.9  #logscale
-# k_res = 200
+k_min = -5  #logscale
+k_max = -1.9  #logscale
+k_res = 200
 
-# # pivot scale
-# k0 = 0.05
+# pivot scale
+k0 = 0.05
 
-# if k_max<=-3:
-#     kaux = np.logspace(k_min, k_max, k_res)
-# else:
-#     kaux = np.append(np.logspace(k_min, -3, 200),np.logspace(-2.99, k_max, 10000))
+if k_max<=-3:
+    kaux = np.logspace(k_min, k_max, k_res)
+else:
+    kaux = np.append(np.logspace(k_min, -3, 200),np.logspace(-2.99, k_max, 10000))
 
 log_kmax = 2
 log_kmin = -5

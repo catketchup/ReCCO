@@ -158,24 +158,3 @@ class BubbleCollision_RF():
 
     def RQF_eff(self, theta_e):
         return self.RQF_eff_SW(theta_e) + self.RQF_eff_decDopp(theta_e) + self.RQF_eff_ISW(theta_e)
-
-    def Y_s2l2m0(self, theta_e):
-        return (3/4)*np.sqrt(5/(6*pi))*np.sin(theta_e)**2
-
-    def q_l2m0(self, name):
-        theta_e_deg = np.linspace(0,180,200)
-        theta_e = np.deg2rad(theta_e_deg)
-
-        if name == 'SW':
-            RQF_eff = self.RQF_eff_SW(theta_e)
-        elif name == 'decDopp':
-            RQF_eff = self.RQF_eff_decDopp(theta_e)
-        elif name == 'ISW':
-            RQF_eff = self.RQF_eff_ISW(theta_e)
-        else name == 'total':
-            RQF_eff = self.RQF_eff(theta_e)
-
-        integrand = 2*np.pi*np.sin(theta_e)*self.Y_s2l2m0(theta_e)*RQF_eff
-
-        return integrate.simps(integrand, theta_e)
-
