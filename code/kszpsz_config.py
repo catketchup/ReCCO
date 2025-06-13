@@ -15,6 +15,7 @@ ksz_estim_signal_lmax = 100
 N_bins = 4 #number of red shift bins, uniform in conformal distance.
 
 transfer_integrand_sampling = 1000
+n_samples = 10
 
 ################ halomodel
 
