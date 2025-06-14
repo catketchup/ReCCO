@@ -3,10 +3,10 @@ import numpy as np
 
 ################ red shift binning
 
-z_max = 5 #highest redshift.
+z_max = 0.7 #highest redshift.
 z_min = 0.4 #lowest redshift.
 
-N_bins = 10 #number of red shift bins, uniform in conformal distance.
+N_bins = 4 #number of red shift bins, uniform in conformal distance.
 
 # using the z_boundaries for F. McCarthy et al. 2024
 # z_boundaries = [0.4, 0.49, 0.57, 0.64, 0.7]
@@ -74,3 +74,6 @@ CIB_model = 'Websky'
 ################ Cleaning tags
 cleaning_mode = 'SO'
 cleaning_frequencies = {'Planck' : np.array([30,44,70,100,143,217,353,545,857]), 'SO' : np.array([27,39,93,145,225,280]), 'DoubleSO' : np.round(np.concatenate([np.linspace(10,120,10),np.linspace(125,165,8),np.logspace(np.log10(177),np.log10(1500),20)]),0)[1:-1:3]}
+
+
+
